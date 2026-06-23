@@ -463,7 +463,7 @@ class DigitalTwinApp {
             const podsCount = node.pods.length || 1;
             node.cpu_usage = Math.floor(totalCpu / podsCount);
             node.memory_usage = Math.floor(totalMem / podsCount);
-        }
+        });
 
         // 2. Render all active screens
         this.renderAll();
