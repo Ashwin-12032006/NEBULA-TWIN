@@ -280,18 +280,18 @@ export class DependencyGraphVisualizer {
             });
 
             const podsListHtml = matchedPods.map(p => `
-                <div style="display:flex; justify-content:between; align-items:center; background:rgba(0,0,0,0.2); padding:6px 10px; border-radius:var(--radius-sm); font-family:var(--font-mono); font-size:0.7rem; margin-bottom:4px;">
-                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px;">${p.pod_name}</span>
-                    <span style="color:${p.status === 'running' ? 'var(--color-green)' : 'var(--color-red)'}; font-weight:700;">${p.status.toUpperCase()}</span>
+                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2); padding:6px 10px; border-radius:var(--radius-sm); font-family:var(--font-mono); font-size:0.7rem; margin-bottom:4px;">
+                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex-grow:1; min-width:0; margin-right:10px;">${p.pod_name}</span>
+                    <span style="color:${p.status === 'running' ? 'var(--color-green)' : 'var(--color-red)'}; font-weight:700; flex-shrink:0;">${p.status.toUpperCase()}</span>
                 </div>
             `).join('');
 
             inspectorHtml += `
                 <div class="flex-column">
-                    <div style="display:flex; justify-content:between;"><span class="text-muted">Target Path:</span><span style="font-family:var(--font-mono); font-size:0.75rem;">/api/v1/${service.id.split('-')[0]}</span></div>
-                    <div style="display:flex; justify-content:between;"><span class="text-muted">Avg Latency:</span><span style="font-family:var(--font-mono); font-size:0.75rem;">${service.latency} ms</span></div>
-                    <div style="display:flex; justify-content:between;"><span class="text-muted">HTTP Failure rate:</span><span style="font-family:var(--font-mono); font-size:0.75rem; color:${service.errorRate > 0 ? 'var(--color-red)' : 'var(--color-green)'};">${service.errorRate}%</span></div>
-                    <div style="display:flex; justify-content:between;"><span class="text-muted">Throughput:</span><span style="font-family:var(--font-mono); font-size:0.75rem;">${service.status === 'failed' ? '0' : '150-180'} req/sec</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span class="text-muted">Target Path:</span><span style="font-family:var(--font-mono); font-size:0.75rem;">/api/v1/${service.id.split('-')[0]}</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span class="text-muted">Avg Latency:</span><span style="font-family:var(--font-mono); font-size:0.75rem;">${service.latency} ms</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span class="text-muted">HTTP Failure rate:</span><span style="font-family:var(--font-mono); font-size:0.75rem; color:${service.errorRate > 0 ? 'var(--color-red)' : 'var(--color-green)'};">${service.errorRate}%</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span class="text-muted">Throughput:</span><span style="font-family:var(--font-mono); font-size:0.75rem;">${service.status === 'failed' ? '0' : '150-180'} req/sec</span></div>
                 </div>
                 <div>
                     <div class="section-label">Active Replica Pods (${matchedPods.length})</div>
@@ -310,9 +310,9 @@ export class DependencyGraphVisualizer {
         } else {
             inspectorHtml += `
                 <div class="flex-column">
-                    <div style="display:flex; justify-content:between;"><span class="text-muted">Resource Type:</span><span style="text-transform:capitalize;">${service.type}</span></div>
-                    <div style="display:flex; justify-content:between;"><span class="text-muted">Namespace:</span><span>internal</span></div>
-                    <div style="display:flex; justify-content:between;"><span class="text-muted">Status:</span><span style="color:var(--color-green); font-weight:700;">Healthy</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span class="text-muted">Resource Type:</span><span style="text-transform:capitalize;">${service.type}</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span class="text-muted">Namespace:</span><span>internal</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span class="text-muted">Status:</span><span style="color:var(--color-green); font-weight:700;">Healthy</span></div>
                 </div>
                 <p style="font-size:0.75rem; color:var(--text-secondary); line-height:1.4;">This is a backing datastore/messaging infrastructure node. Resiliency is managed by AWS multi-AZ failovers.</p>
             `;

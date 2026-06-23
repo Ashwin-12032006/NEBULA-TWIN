@@ -199,23 +199,23 @@ export class InfraMapVisualizer {
                         <h4 style="font-family:var(--font-mono); color:white; font-size:0.9rem;">${data.node_name}</h4>
                     </div>
                     <div class="flex-column">
-                        <div style="display:flex; justify-content:between;"><span class="text-muted">OS Image:</span><span>Amazon Linux 2</span></div>
-                        <div style="display:flex; justify-content:between;"><span class="text-muted">Instance Type:</span><span style="font-family:var(--font-mono);">m5.large</span></div>
-                        <div style="display:flex; justify-content:between;"><span class="text-muted">CPU Cores:</span><span>2 vCPU</span></div>
-                        <div style="display:flex; justify-content:between;"><span class="text-muted">Memory RAM:</span><span>8.0 GiB</span></div>
-                        <div style="display:flex; justify-content:between;"><span class="text-muted">Internal IP:</span><span style="font-family:var(--font-mono);">10.0.${Math.floor(Math.random()*254)}.${Math.floor(Math.random()*254)}</span></div>
+                        <div style="display:flex; justify-content:space-between;"><span class="text-muted">OS Image:</span><span>Amazon Linux 2</span></div>
+                        <div style="display:flex; justify-content:space-between;"><span class="text-muted">Instance Type:</span><span style="font-family:var(--font-mono);">m5.large</span></div>
+                        <div style="display:flex; justify-content:space-between;"><span class="text-muted">CPU Cores:</span><span>2 vCPU</span></div>
+                        <div style="display:flex; justify-content:space-between;"><span class="text-muted">Memory RAM:</span><span>8.0 GiB</span></div>
+                        <div style="display:flex; justify-content:space-between;"><span class="text-muted">Internal IP:</span><span style="font-family:var(--font-mono);">10.0.${Math.floor(Math.random()*254)}.${Math.floor(Math.random()*254)}</span></div>
                     </div>
                     <div>
                         <div class="section-label">Resource Telemetry</div>
                         <div class="flex-column" style="gap:5px; margin-top:5px;">
-                            <div style="display:flex; justify-content:between; font-size:0.75rem;">
+                            <div style="display:flex; justify-content:space-between; font-size:0.75rem;">
                                 <span>CPU Usage (${data.cpu_usage}%)</span>
                                 <span class="${data.cpu_usage > 85 ? 'text-red' : (data.cpu_usage > 70 ? 'text-yellow' : 'text-green')}">${data.cpu_usage > 85 ? 'HIGH' : 'HEALTHY'}</span>
                             </div>
                             <div class="heatmap-bar-container"><div class="heatmap-bar ${data.cpu_usage > 85 ? 'red' : (data.cpu_usage > 70 ? 'yellow' : 'green')}" style="width:${data.cpu_usage}%"></div></div>
                         </div>
                         <div class="flex-column" style="gap:5px; margin-top:10px;">
-                            <div style="display:flex; justify-content:between; font-size:0.75rem;">
+                            <div style="display:flex; justify-content:space-between; font-size:0.75rem;">
                                 <span>Memory Usage (${data.memory_usage}%)</span>
                                 <span class="${data.memory_usage > 85 ? 'text-red' : (data.memory_usage > 70 ? 'text-yellow' : 'text-green')}">${data.memory_usage > 85 ? 'HIGH' : 'HEALTHY'}</span>
                             </div>
@@ -238,21 +238,21 @@ export class InfraMapVisualizer {
                         <h4 style="font-family:var(--font-mono); color:white; font-size:0.8rem; word-break:break-all;">${data.pod_name}</h4>
                     </div>
                     <div class="flex-column">
-                        <div style="display:flex; justify-content:between;"><span class="text-muted">Namespace:</span><span style="font-family:var(--font-mono);">production</span></div>
-                        <div style="display:flex; justify-content:between;"><span class="text-muted">Node:</span><span style="font-family:var(--font-mono); font-size:0.7rem;">${parentNodeName}</span></div>
-                        <div style="display:flex; justify-content:between;"><span class="text-muted">Status:</span><span style="color:${statusColor}; font-weight:700; text-transform:uppercase;">${data.status}</span></div>
-                        <div style="display:flex; justify-content:between;"><span class="text-muted">Restarts:</span><span style="font-family:var(--font-mono);">${data.restarts || 0}</span></div>
+                        <div style="display:flex; justify-content:space-between;"><span class="text-muted">Namespace:</span><span style="font-family:var(--font-mono);">production</span></div>
+                        <div style="display:flex; justify-content:space-between;"><span class="text-muted">Node:</span><span style="font-family:var(--font-mono); font-size:0.7rem;">${parentNodeName}</span></div>
+                        <div style="display:flex; justify-content:space-between;"><span class="text-muted">Status:</span><span style="color:${statusColor}; font-weight:700; text-transform:uppercase;">${data.status}</span></div>
+                        <div style="display:flex; justify-content:space-between;"><span class="text-muted">Restarts:</span><span style="font-family:var(--font-mono);">${data.restarts || 0}</span></div>
                     </div>
                     <div>
                         <div class="section-label">Pod Telemetry</div>
                         <div class="flex-column" style="gap:5px; margin-top:5px;">
-                            <div style="display:flex; justify-content:between; font-size:0.75rem;">
+                            <div style="display:flex; justify-content:space-between; font-size:0.75rem;">
                                 <span>CPU Usage (${data.cpu}%)</span>
                             </div>
                             <div class="heatmap-bar-container"><div class="heatmap-bar ${data.cpu > 85 ? 'red' : (data.cpu > 70 ? 'yellow' : 'green')}" style="width:${data.cpu}%"></div></div>
                         </div>
                         <div class="flex-column" style="gap:5px; margin-top:10px;">
-                            <div style="display:flex; justify-content:between; font-size:0.75rem;">
+                            <div style="display:flex; justify-content:space-between; font-size:0.75rem;">
                                 <span>Memory (${data.memory} MB)</span>
                             </div>
                             <div class="heatmap-bar-container"><div class="heatmap-bar ${data.memory > 450 ? 'red' : (data.memory > 350 ? 'yellow' : 'green')}" style="width:${Math.min((data.memory/512)*100, 100)}%"></div></div>
@@ -272,10 +272,10 @@ export class InfraMapVisualizer {
                         <h4 style="font-family:var(--font-mono); color:white; font-size:0.9rem;">${data.name}</h4>
                     </div>
                     <div class="flex-column">
-                        <div style="display:flex; justify-content:between;"><span class="text-muted">Engine:</span><span>Aurora PostgreSQL 13</span></div>
-                        <div style="display:flex; justify-content:between;"><span class="text-muted">Instance Class:</span><span style="font-family:var(--font-mono);">db.r6g.xlarge</span></div>
-                        <div style="display:flex; justify-content:between;"><span class="text-muted">Replica Count:</span><span>1 Read, 1 Write</span></div>
-                        <div style="display:flex; justify-content:between;"><span class="text-muted">Connection String:</span><span style="font-family:var(--font-mono); font-size:0.65rem; word-break:break-all;">rds-twin-postgres-db.cluster-c12.us-east-1.rds.amazonaws.com</span></div>
+                        <div style="display:flex; justify-content:space-between;"><span class="text-muted">Engine:</span><span>Aurora PostgreSQL 13</span></div>
+                        <div style="display:flex; justify-content:space-between;"><span class="text-muted">Instance Class:</span><span style="font-family:var(--font-mono);">db.r6g.xlarge</span></div>
+                        <div style="display:flex; justify-content:space-between;"><span class="text-muted">Replica Count:</span><span>1 Read, 1 Write</span></div>
+                        <div style="display:flex; justify-content:space-between;"><span class="text-muted">Connection String:</span><span style="font-family:var(--font-mono); font-size:0.65rem; word-break:break-all;">rds-twin-postgres-db.cluster-c12.us-east-1.rds.amazonaws.com</span></div>
                     </div>
                     <div>
                         <div class="section-label">Database Status</div>
