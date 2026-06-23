@@ -112,7 +112,19 @@ public class KubernetesService {
     public String getPodLogs(String podName, String namespace) {
         if (isK8sConnected) {
             try {
-                return apiInstance.readNamespacedPodLog(podName, namespace, null, null, null, null, null, null, null, null);
+                return apiInstance.readNamespacedPodLog(
+                    podName,
+                    namespace,
+                    (String) null,
+                    (Boolean) null,
+                    (Boolean) null,
+                    (Integer) null,
+                    (String) null,
+                    (Boolean) null,
+                    (Integer) null,
+                    (Integer) null,
+                    (Boolean) null
+                );
             } catch (Exception e) {
                 return "Failed to fetch logs from live EKS cluster: " + e.getMessage();
             }
