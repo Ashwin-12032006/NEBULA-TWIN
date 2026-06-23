@@ -1,0 +1,11 @@
+{
+  "name": "cloud-environment-digital-twin",
+  "version": "1.0.0",
+  "description": "Cloud Environment Digital Twin - AI-Powered DevOps Monitoring Platform",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js"
+  },
+  "author": "Antigravity",
+  "license": "MIT"
+}

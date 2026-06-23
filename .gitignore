@@ -1,0 +1,20 @@
+# Build outputs
+target/
+*.class
+*.jar
+*.war
+
+# Logs and DB
+*.log
+nebulatwindb/
+
+# IDE configs
+.idea/
+.vscode/
+*.iml
+*.suo
+
+# Local Node modules
+node_modules/
+dist/
+.env

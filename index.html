@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Environment Digital Twin - AI-Powered DevOps Observability</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <!-- D3.js for Graph & Map Rendering -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-radial"></div>
+
+    <div id="app-shell">
+        <!-- Sidebar Navigation -->
+        <sidebar>
+            <div class="brand">
+                <!-- SVG Animated Logo -->
+                <svg class="brand-logo" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="40" stroke="currentColor" stroke-width="2" stroke-dasharray="10 5" fill="none" />
+                    <polygon points="50,15 90,80 10,80" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round" />
+                    <circle cx="50" cy="50" r="10" fill="currentColor" />
+                </svg>
+                <div>
+                    <h1 class="brand-name">NEBULA-TWIN</h1>
+                    <div class="brand-subtitle">Cloud Digital Twin</div>
+                </div>
+            </div>
+
+            <!-- RBAC Role Switcher -->
+            <div class="sidebar-section">
+                <div class="section-label">RBAC Identity Role</div>
+                <select id="rbac-role-select" class="role-selector">
+                    <option value="admin">Admin (Full Control)</option>
+                    <option value="devops">DevOps Engineer</option>
+                    <option value="developer">Developer</option>
+                    <option value="viewer">Viewer (Read-Only)</option>
+                </select>
+            </div>
+
+            <!-- Cluster Selector -->
+            <div class="sidebar-section">
+                <div class="section-label">Active Cluster Context</div>
+                <select id="cluster-context-select" class="role-selector">
+                    <option value="prod">EKS-PROD-US-EAST</option>
+                    <option value="staging">EKS-STAGE-US-WEST</option>
+                    <option value="dev">EKS-DEV-LOCAL</option>
+                </select>
+            </div>
+
+            <!-- Sidebar Menu -->
+            <ul class="sidebar-menu">
+                <li class="menu-item">
+                    <a class="menu-link active" data-tab="inframap">
+                        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                        <span>Infrastructure Map</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a class="menu-link" data-tab="dependency">
+                        <svg viewBox="0 0 24 24"><path d="M9 17H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M15 17h4a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-4M12 21v-4m0-12V3M12 12h.01"/></svg>
+                        <span>Dependency Graph</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a class="menu-link" data-tab="heatmap">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                        <span>Resource Heatmap</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a class="menu-link" data-tab="prediction">
+                        <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                        <span>AI Failure Predictor</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a class="menu-link" data-tab="pipeline">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <span>Deployment Timeline</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a class="menu-link" data-tab="terraform">
+                        <svg viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                        <span>Terraform IaC</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a class="menu-link" data-tab="logs">
+                        <svg viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                        <span>Log Analytics</span>
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Simulation Controls Footer -->
+            <div class="sidebar-footer">
+                <div class="section-label">Simulation Tools</div>
+                <div class="config-group">
+                    <label class="switch-label">
+                        <span>Auto-Healing Pods</span>
+                        <input type="checkbox" id="auto-healing-toggle" class="switch-input" checked>
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+                <div class="config-group">
+                    <label class="switch-label">
+                        <span>Slack Webhooks</span>
+                        <input type="checkbox" id="slack-toggle" class="switch-input" checked>
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+                <div class="config-group">
+                    <label class="switch-label">
+                        <span>Live Cluster (API)</span>
+                        <input type="checkbox" id="live-api-toggle" class="switch-input">
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+                <div class="sim-speed-control mt-sm">
+                    <span>Engine Tick</span>
+                    <button id="sim-toggle-btn" class="sim-btn active">Running</button>
+                </div>
+                <button id="inject-fault-btn" class="btn btn-danger w-full mt-sm">
+                    <svg style="width:14px;height:14px;stroke:currentColor;fill:none;vertical-align:middle;margin-right:5px;" viewBox="0 0 24 24"><path stroke-width="2" d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line stroke-width="2" x1="12" y1="9" x2="12" y2="13"/><line stroke-width="2" x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    Inject Random Fault
+                </button>
+            </div>
+        </sidebar>
+
+        <!-- Main Dashboard Body -->
+        <main>
+            <!-- Top Dashboard Bar -->
+            <header>
+                <div class="header-left">
+                    <div class="cluster-badge">
+                        <span id="cluster-status-dot" class="status-dot"></span>
+                        <span id="cluster-name-display">EKS-PROD-US-EAST</span>
+                    </div>
+                </div>
+
+                <div class="header-metrics">
+                    <div class="metric-pill">
+                        <span class="metric-pill-label">Total Nodes</span>
+                        <span id="metric-nodes" class="metric-pill-value">4</span>
+                    </div>
+                    <div class="metric-pill">
+                        <span class="metric-pill-label">Active Pods</span>
+                        <span id="metric-pods" class="metric-pill-value">18 / 18</span>
+                    </div>
+                    <div class="metric-pill">
+                        <span class="metric-pill-label">Cluster CPU</span>
+                        <span id="metric-cpu" class="metric-pill-value">34%</span>
+                    </div>
+                    <div class="metric-pill">
+                        <span class="metric-pill-label">Cluster Memory</span>
+                        <span id="metric-memory" class="metric-pill-value">48%</span>
+                    </div>
+                    <div class="metric-pill">
+                        <span class="metric-pill-label">Unresolved Alerts</span>
+                        <span id="metric-alerts" class="metric-pill-value">0</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content Area -->
+            <div class="dashboard-content">
+
+                <!-- 1. Infrastructure Map Tab -->
+                <div id="inframap-pane" class="tab-pane active">
+                    <div class="infra-layout">
+                        <div class="infra-viewport">
+                            <svg id="infra-svg"></svg>
+                        </div>
+                        <div class="infra-sidebar">
+                            <h3 class="card-title">
+                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                Metadata Inspector
+                            </h3>
+                            <div id="infra-inspector-content" style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 12px; color: var(--text-secondary);">
+                                <p>Select a node or pod in the environment map to inspect its details and current telemetry metrics.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Dependency Graph Tab -->
+                <div id="dependency-pane" class="tab-pane">
+                    <div class="dependency-layout">
+                        <div class="dependency-viewport">
+                            <svg id="dependency-svg"></svg>
+                        </div>
+                        <div class="dependency-sidebar">
+                            <h3 class="card-title">
+                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                Service Telecom
+                            </h3>
+                            <div id="dependency-inspector-content" style="font-size: 0.8rem; display: flex; flex-direction: column; gap: 12px; color: var(--text-secondary);">
+                                <p>Click a microservice node in the graph to view downstream dependencies, average latency, error rates, and request pipelines.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Resource Heatmap Tab -->
+                <div id="heatmap-pane" class="tab-pane">
+                    <div class="heatmap-container">
+                        <!-- CPU Heatmap -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="15" x2="23" y2="15"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="15" x2="4" y2="15"/></svg>
+                                    Pods CPU Utilization Heatmap
+                                </h3>
+                                <div class="card-actions">
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">Scale: Green (Healthy) &rarr; Yellow (Moderate) &rarr; Red (Critical)</span>
+                                </div>
+                            </div>
+                            <div id="cpu-heatmap-grid" class="heatmap-grid"></div>
+                        </div>
+
+                        <!-- Memory Heatmap -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <svg viewBox="0 0 24 24"><path d="M6 2H18a2 2 0 0 1 2 2V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4A2 2 0 0 1 6 2z"/><line x1="6" y1="6" x2="18" y2="6"/><line x1="6" y1="10" x2="18" y2="10"/><line x1="6" y1="14" x2="18" y2="14"/><line x1="6" y1="18" x2="18" y2="18"/></svg>
+                                    Pods Memory Allocation Heatmap
+                                </h3>
+                            </div>
+                            <div id="memory-heatmap-grid" class="heatmap-grid"></div>
+                        </div>
+
+                        <!-- Disk Usage Heatmap -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>
+                                    Nodes Storage Heatmap
+                                </h3>
+                            </div>
+                            <div id="disk-heatmap-grid" class="heatmap-grid"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. AI Failure Predictor Tab -->
+                <div id="prediction-pane" class="tab-pane">
+                    <div class="ai-layout">
+                        <div class="flex-column gap-md">
+                            <!-- Telemetry Chart -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+                                        Metrics Telemetry Stream (15m history & 15m forecast)
+                                    </h3>
+                                    <div class="card-actions">
+                                        <select id="ai-pod-select" class="role-selector" style="width: 200px;">
+                                            <!-- Dynamically populated -->
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="telemetry-chart-container">
+                                    <canvas id="telemetry-canvas"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Regression Model Output -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                                        Predictive Intelligence Engine
+                                    </h3>
+                                </div>
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                    <div style="font-size:0.8rem; color:var(--text-secondary); display:flex; flex-direction:column; gap:8px;">
+                                        <p><strong>Predictive Algorithm:</strong> Linear Trend Extrapolation with Random Forest Classifier weighting.</p>
+                                        <p><strong>Confidence Score:</strong> <span id="ai-confidence" style="color:var(--color-green); font-weight:700;">94.2%</span></p>
+                                        <p><strong>Sample Target Variable:</strong> Crash-Loop Back-off event likelihood in next 15 minutes.</p>
+                                        <p><strong>Input Telemetry features:</strong> CPU utilization, Memory usage rate change, Disk I/O speed, Network response latency, and Error Rate trend.</p>
+                                    </div>
+                                    <div style="font-size:0.8rem; color:var(--text-secondary); display:flex; flex-direction:column; gap:8px;">
+                                        <div style="background:rgba(8,11,16,0.6); padding:10px; border-radius:var(--radius-md); border:1px solid var(--border-color); font-family:var(--font-mono);">
+                                            <div style="color:var(--color-cyan); margin-bottom:4px;">[AI Reasoning Model Logs]</div>
+                                            <div id="ai-reasoning-log" style="height:80px; overflow-y:auto; font-size:0.75rem;">
+                                                Initializing regression metrics...
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Predictions list & Actions -->
+                        <div class="flex-column gap-md">
+                            <div class="card h-full">
+                                <div class="card-header">
+                                    <h3 class="card-title">
+                                        <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+                                        Predictive Alerts
+                                    </h3>
+                                </div>
+                                <div id="ai-predictions-list" class="ai-recommendations">
+                                    <!-- Populated dynamically -->
+                                    <div class="rec-card" style="border-color: rgba(16, 185, 129, 0.2); background: rgba(16, 185, 129, 0.02);">
+                                        <div class="rec-title" style="color: var(--color-green);">
+                                            <span class="status-dot" style="background-color: var(--color-green); box-shadow: 0 0 6px var(--color-green);"></span>
+                                            All Pods Stable
+                                        </div>
+                                        <div class="rec-desc">No imminent crashes predicted in the next 15 minutes. Infrastructure health score is 98/100.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Deployment Timeline Tab -->
+                <div id="pipeline-pane" class="tab-pane">
+                    <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:20px; height:calc(100vh - 134px);">
+                        <!-- Active Deployment Build -->
+                        <div class="card" style="display:flex; flex-direction:column;">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                    CI/CD Deployment Workspace
+                                </h3>
+                                <div class="card-actions">
+                                    <button id="trigger-deploy-btn" class="btn btn-primary">
+                                        <svg style="width:14px;height:14px;stroke:currentColor;fill:none;vertical-align:middle;margin-right:5px;" viewBox="0 0 24 24"><polygon stroke-width="2" points="5 3 19 12 5 21 5 3"/></svg>
+                                        Trigger Deploy v1.4
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Pipeline Visualization -->
+                            <div style="background:rgba(8,11,16,0.5); padding:15px; border-radius:var(--radius-md); border:1px solid rgba(0,210,255,0.1); margin-bottom:15px; display:flex; justify-content:space-around; align-items:center;">
+                                <div class="pipeline-step-node" id="step-git" style="display:flex; flex-direction:column; align-items:center; opacity:0.5;">
+                                    <div style="width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.05); border:2px solid var(--text-muted); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.8rem; font-family:var(--font-mono);">GIT</div>
+                                    <span style="font-size:0.65rem; margin-top:4px; color:var(--text-secondary);">Push Trigger</span>
+                                </div>
+                                <div style="flex-grow:1; height:2px; background:rgba(255,255,255,0.05); margin: 0 10px;" id="line-git-test"></div>
+                                <div class="pipeline-step-node" id="step-test" style="display:flex; flex-direction:column; align-items:center; opacity:0.5;">
+                                    <div style="width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.05); border:2px solid var(--text-muted); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.8rem; font-family:var(--font-mono);">TEST</div>
+                                    <span style="font-size:0.65rem; margin-top:4px; color:var(--text-secondary);">GitHub Actions</span>
+                                </div>
+                                <div style="flex-grow:1; height:2px; background:rgba(255,255,255,0.05); margin: 0 10px;" id="line-test-build"></div>
+                                <div class="pipeline-step-node" id="step-build" style="display:flex; flex-direction:column; align-items:center; opacity:0.5;">
+                                    <div style="width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.05); border:2px solid var(--text-muted); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.8rem; font-family:var(--font-mono);">BUILD</div>
+                                    <span style="font-size:0.65rem; margin-top:4px; color:var(--text-secondary);">Jenkins Docker</span>
+                                </div>
+                                <div style="flex-grow:1; height:2px; background:rgba(255,255,255,0.05); margin: 0 10px;" id="line-build-ecr"></div>
+                                <div class="pipeline-step-node" id="step-ecr" style="display:flex; flex-direction:column; align-items:center; opacity:0.5;">
+                                    <div style="width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.05); border:2px solid var(--text-muted); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.8rem; font-family:var(--font-mono);">ECR</div>
+                                    <span style="font-size:0.65rem; margin-top:4px; color:var(--text-secondary);">AWS Push</span>
+                                </div>
+                                <div style="flex-grow:1; height:2px; background:rgba(255,255,255,0.05); margin: 0 10px;" id="line-ecr-eks"></div>
+                                <div class="pipeline-step-node" id="step-eks" style="display:flex; flex-direction:column; align-items:center; opacity:0.5;">
+                                    <div style="width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.05); border:2px solid var(--text-muted); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.8rem; font-family:var(--font-mono);">EKS</div>
+                                    <span style="font-size:0.65rem; margin-top:4px; color:var(--text-secondary);">Deploy Rollout</span>
+                                </div>
+                            </div>
+
+                            <!-- Live Build Terminal -->
+                            <div class="terminal-container" style="flex-grow:1;">
+                                <div class="terminal-header">
+                                    <div class="terminal-title">
+                                        <svg style="width:12px;height:12px;stroke:currentColor;fill:none;vertical-align:middle;" viewBox="0 0 24 24"><rect stroke-width="2" x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line stroke-width="2" x1="2" y1="20" x2="22" y2="20"/><line stroke-width="2" x1="12" y1="2" x2="12" y2="20"/></svg>
+                                        Pipeline Console Logs
+                                    </div>
+                                    <div class="terminal-dots">
+                                        <span class="terminal-dot"></span>
+                                        <span class="terminal-dot"></span>
+                                        <span class="terminal-dot"></span>
+                                    </div>
+                                </div>
+                                <div id="pipeline-console" class="terminal-body">
+                                    <div class="terminal-line">System idle. Ready to trigger new CI/CD deployment.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Deployment History Timeline -->
+                        <div class="card" style="display:flex; flex-direction:column; overflow:hidden;">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 15 15"/></svg>
+                                    EKS Deployment History
+                                </h3>
+                            </div>
+                            <div id="deployment-timeline" class="timeline" style="overflow-y:auto; flex-grow:1;">
+                                <!-- Dynamically populated -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. Terraform IaC Tab -->
+                <div id="terraform-pane" class="tab-pane">
+                    <div class="terraform-layout">
+                        <!-- Code panel -->
+                        <div class="tf-code-pane">
+                            <div class="tf-code-header">
+                                <span class="tf-filename">terraform/main.tf</span>
+                                <div style="display:flex; gap:10px;">
+                                    <button id="tf-plan-btn" class="btn btn-primary">
+                                        <svg style="width:12px;height:12px;stroke:currentColor;fill:none;vertical-align:middle;" viewBox="0 0 24 24"><polygon stroke-width="2" points="5 3 19 12 5 21 5 3"/></svg>
+                                        Plan
+                                    </button>
+                                    <button id="tf-apply-btn" class="btn btn-green" disabled>
+                                        <svg style="width:12px;height:12px;stroke:currentColor;fill:none;vertical-align:middle;" viewBox="0 0 24 24"><path stroke-width="2" d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline stroke-width="2" points="22 4 12 14.01 9 11.01"/></svg>
+                                        Apply
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="tf-code-body">
+<span class="tf-comment"># Terraform definition for Nebula-Twin AWS infrastructure</span>
+<span class="tf-keyword">provider</span> <span class="tf-string">"aws"</span> {
+  region = <span class="tf-string">"us-east-1"</span>
+}
+
+<span class="tf-comment"># VPC Network setup</span>
+<span class="tf-keyword">resource</span> <span class="tf-type">"aws_vpc"</span> <span class="tf-string">"main"</span> {
+  cidr_block           = <span class="tf-string">"10.0.0.0/16"</span>
+  enable_dns_hostnames = <span class="tf-number">true</span>
+  tags = {
+    Name = <span class="tf-string">"nebula-twin-vpc"</span>
+  }
+}
+
+<span class="tf-keyword">resource</span> <span class="tf-type">"aws_eks_cluster"</span> <span class="tf-string">"prod"</span> {
+  name     = <span class="tf-string">"eks-prod-us-east"</span>
+  role_arn = aws_iam_role.cluster.arn
+
+  vpc_config {
+    subnet_ids = aws_subnet.public[*].id
+  }
+}
+
+<span class="tf-keyword">resource</span> <span class="tf-type">"aws_rds_cluster"</span> <span class="tf-string">"postgres"</span> {
+  cluster_identifier = <span class="tf-string">"rds-twin-postgres-db"</span>
+  engine             = <span class="tf-string">"aurora-postgresql"</span>
+  engine_version     = <span class="tf-string">"13.6"</span>
+  database_name      = <span class="tf-string">"nebulatwindb"</span>
+  master_username    = <span class="tf-string">"dbadmin"</span>
+  master_password    = <span class="tf-string">"TwinP@ssw0rdSecrets!"</span>
+}
+
+<span class="tf-keyword">resource</span> <span class="tf-type">"aws_s3_bucket"</span> <span class="tf-string">"logs"</span> {
+  bucket = <span class="tf-string">"nebula-twin-logstash-storage"</span>
+  acl    = <span class="tf-string">"private"</span>
+}
+                            </div>
+                        </div>
+
+                        <!-- Console log panel -->
+                        <div class="card" style="display:flex; flex-direction:column; overflow:hidden;">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <svg viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                                    Terraform Execution Workspace
+                                </h3>
+                            </div>
+                            <div class="terminal-container" style="flex-grow:1;">
+                                <div class="terminal-header">
+                                    <div class="terminal-title">bash</div>
+                                    <div class="terminal-dots">
+                                        <span class="terminal-dot"></span>
+                                        <span class="terminal-dot"></span>
+                                        <span class="terminal-dot"></span>
+                                    </div>
+                                </div>
+                                <div id="tf-console" class="terminal-body" style="background:#05070a; color:#f8f8f2;">
+                                    <div class="terminal-line">Initialized Terraform workspace. Ready to run Plan or Apply.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. Log Analytics Tab -->
+                <div id="logs-pane" class="tab-pane">
+                    <div class="card" style="display:flex; flex-direction:column; height:calc(100vh - 134px);">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <svg viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                                Centralized Log Search Engine
+                            </h3>
+                            <div class="card-actions" style="display:flex; gap:10px; width:100%;">
+                                <select id="log-service-filter" class="role-selector" style="width:180px;">
+                                    <option value="all">All Services</option>
+                                    <option value="frontend">frontend</option>
+                                    <option value="gateway">api-gateway</option>
+                                    <option value="user-service">user-service</option>
+                                    <option value="order-service">order-service</option>
+                                    <option value="payment-service">payment-service</option>
+                                    <option value="notification-service">notification-service</option>
+                                    <option value="database">postgresql</option>
+                                    <option value="kube-system">kube-system</option>
+                                </select>
+                                <select id="log-severity-filter" class="role-selector" style="width:120px;">
+                                    <option value="all">All Levels</option>
+                                    <option value="INFO">INFO</option>
+                                    <option value="WARN">WARN</option>
+                                    <option value="ERROR">ERROR</option>
+                                </select>
+                                <input type="text" id="log-search-query" class="role-selector" style="flex-grow:1; min-width:150px;" placeholder="Search logs (e.g. timeout, connection, restart)...">
+                                <button id="log-clear-btn" class="btn">Clear</button>
+                            </div>
+                        </div>
+
+                        <div class="terminal-container" style="flex-grow:1;">
+                            <div class="terminal-header">
+                                <div class="terminal-title">Elasticsearch/FluentD Stream</div>
+                                <div style="font-size:0.7rem; color:var(--text-muted);">Auto-scrolling active</div>
+                            </div>
+                            <div id="log-terminal-stream" class="terminal-body" style="max-height:unset; font-size:0.8rem; background-color:#05070a; color:#c7c7c7;">
+                                <!-- Live container logs streaming -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- Slack Notification Drawer (Right Side) -->
+        <div class="slack-dock">
+            <div class="slack-header">
+                <div class="slack-channel-name">ops-alerts</div>
+                <div style="font-size:0.7rem; opacity:0.8; font-family:var(--font-mono);">SLACK INTEGRATION</div>
+            </div>
+            <div id="slack-messages-container" class="slack-body">
+                <!-- Slack webhook integration messages will flow here -->
+                <div class="slack-message">
+                    <div class="slack-avatar">U</div>
+                    <div class="slack-msg-content">
+                        <div class="slack-msg-header">
+                            <span class="slack-username">ops-bot</span>
+                            <span class="slack-timestamp">17:52</span>
+                        </div>
+                        <div>Slack notification channel online. Connected to Kubernetes event stream.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>
