@@ -6,21 +6,29 @@ import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1NodeList;
 import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.util.Config;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class KubernetesService {
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     private CoreV1Api apiInstance;
     private boolean isK8sConnected = false;
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     @PostConstruct
     public void init() {
         try {
-            // Attempt to load standard KubeConfig
             ApiClient client = Config.defaultClient();
             Configuration.setDefaultApiClient(client);
             this.apiInstance = new CoreV1Api();
@@ -31,7 +39,7 @@ public class KubernetesService {
         } catch (Exception e) {
             System.out.println("==================================================================");
             System.out.println("  WARNING: Kubernetes client failed to initialize.                ");
-            System.out.println("  Falling back to simulated cluster mode.                         ");
+            System.out.println("  Falling back to database-driven simulation mode.                ");
             System.out.println("  Reason: " + e.getMessage());
             System.out.println("==================================================================");
             this.isK8sConnected = false;
@@ -42,7 +50,7 @@ public class KubernetesService {
         return this.isK8sConnected;
     }
 
-    // Get Active Nodes List
+    // Get Active Nodes List (from K8s or PostgreSQL)
     public List<Map<String, Object>> getNodes() {
         List<Map<String, Object>> nodeList = new ArrayList<>();
         if (isK8sConnected) {
@@ -51,22 +59,22 @@ public class KubernetesService {
                 list.getItems().forEach(node -> {
                     Map<String, Object> nodeMap = new HashMap<>();
                     nodeMap.put("node_name", node.getMetadata().getName());
-                    nodeMap.put("disk_usage", 40 + new Random().nextInt(20)); // Mock disk from OS capacity
+                    nodeMap.put("disk_usage", 40 + new Random().nextInt(20));
                     nodeMap.put("cpu_usage", 15 + new Random().nextInt(40));
                     nodeMap.put("memory_usage", 30 + new Random().nextInt(30));
                     nodeList.add(nodeMap);
                 });
             } catch (Exception e) {
-                System.err.println("K8s node lookup failed, using simulated fallback: " + e.getMessage());
-                return getSimulatedNodes();
+                System.err.println("K8s node lookup failed, falling back to DB: " + e.getMessage());
+                return getDbNodes();
             }
         } else {
-            return getSimulatedNodes();
+            return getDbNodes();
         }
         return nodeList;
     }
 
-    // Get Active Pods List
+    // Get Active Pods List (from K8s or PostgreSQL)
     public List<Map<String, Object>> getPods() {
         List<Map<String, Object>> podList = new ArrayList<>();
         if (isK8sConnected) {
@@ -83,16 +91,16 @@ public class KubernetesService {
                     podList.add(podMap);
                 });
             } catch (Exception e) {
-                System.err.println("K8s pod lookup failed, using simulated fallback: " + e.getMessage());
-                return getSimulatedPods();
+                System.err.println("K8s pod lookup failed, falling back to DB: " + e.getMessage());
+                return getDbPods();
             }
         } else {
-            return getSimulatedPods();
+            return getDbPods();
         }
         return podList;
     }
 
-    // Restart a pod (deleting it will trigger replica controller rollouts)
+    // Restart a pod (deleting it in K8s or updating status in PostgreSQL)
     public boolean restartPod(String podName, String namespace) {
         if (isK8sConnected) {
             try {
@@ -104,8 +112,27 @@ public class KubernetesService {
                 return false;
             }
         }
-        System.out.println("Simulated Client: Rolling restart for " + podName);
-        return true;
+        
+        // Database-driven rollout simulation: set status to pending, then running
+        try {
+            jdbcTemplate.update("UPDATE pods SET status = 'pending', restarts = restarts + 1 WHERE pod_name = ?", podName);
+            System.out.println("DB Rollout: Set pod " + podName + " status to PENDING.");
+
+            // Schedule return to RUNNING in 3 seconds
+            scheduler.schedule(() -> {
+                try {
+                    jdbcTemplate.update("UPDATE pods SET status = 'running', cpu = 15, memory = 200 WHERE pod_name = ?", podName);
+                    System.out.println("DB Rollout: Set pod " + podName + " status back to RUNNING.");
+                } catch (Exception err) {
+                    System.err.println("Failed to finish DB pod restart rollout: " + err.getMessage());
+                }
+            }, 3, TimeUnit.SECONDS);
+
+            return true;
+        } catch (Exception e) {
+            System.err.println("Database pod update failed: " + e.getMessage());
+            return false;
+        }
     }
 
     // Read live logs
@@ -129,9 +156,9 @@ public class KubernetesService {
                 return "Failed to fetch logs from live EKS cluster: " + e.getMessage();
             }
         }
-        return "[Simulated Log] " + podName + " container started successfully.\n" +
-               "[Simulated Log] listening on port 8080\n" +
-               "[Simulated Log] Connection established with database.";
+        return "[Database Twin Log] " + podName + " container initialized.\n" +
+               "[Database Twin Log] successfully bound socket port 8080.\n" +
+               "[Database Twin Log] connection established with postgresql datasource.";
     }
 
     private String getServiceNameFromPod(String podName) {
@@ -143,30 +170,25 @@ public class KubernetesService {
         return "other";
     }
 
-    private List<Map<String, Object>> getSimulatedNodes() {
-        List<Map<String, Object>> list = new ArrayList<>();
-        Map<String, Object> node = new HashMap<>();
-        node.put("node_name", "sim-node-eks-1.ec2.internal");
-        node.put("disk_usage", 42);
-        node.put("cpu_usage", 30);
-        node.put("memory_usage", 55);
-        list.add(node);
-        return list;
+    private List<Map<String, Object>> getDbNodes() {
+        try {
+            List<Map<String, Object>> dbNodes = jdbcTemplate.queryForList("SELECT node_name, cpu_usage, memory_usage FROM nodes");
+            dbNodes.forEach(n -> {
+                n.put("disk_usage", 40 + new Random().nextInt(20)); // generate disk usage dynamically
+            });
+            return dbNodes;
+        } catch (Exception e) {
+            System.err.println("DB node query failed, using empty mock: " + e.getMessage());
+            return new ArrayList<>();
+        }
     }
 
-    private List<Map<String, Object>> getSimulatedPods() {
-        List<Map<String, Object>> list = new ArrayList<>();
-        String[] pods = {"frontend-pod-1", "api-gateway-pod-1", "user-service-pod-1", "order-service-pod-1", "payment-service-pod-1"};
-        for (String p : pods) {
-            Map<String, Object> pod = new HashMap<>();
-            pod.put("pod_name", p);
-            pod.put("status", "running");
-            pod.put("cpu", 10 + new Random().nextInt(15));
-            pod.put("memory", 150 + new Random().nextInt(100));
-            pod.put("restarts", 0);
-            pod.put("service", getServiceNameFromPod(p));
-            list.add(pod);
+    private List<Map<String, Object>> getDbPods() {
+        try {
+            return jdbcTemplate.queryForList("SELECT pod_name, status, cpu, memory, restarts, service FROM pods");
+        } catch (Exception e) {
+            System.err.println("DB pod query failed, using empty mock: " + e.getMessage());
+            return new ArrayList<>();
         }
-        return list;
     }
 }

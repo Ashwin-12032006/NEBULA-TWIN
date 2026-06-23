@@ -9,10 +9,27 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <!-- D3.js for Graph & Map Rendering -->
-    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- Local D3.js library -->
+    <script src="d3.v7.min.js"></script>
 </head>
 <body>
+    <!-- Global JS Error Diagnostic Banner -->
+    <div id="global-js-error-banner" style="display:none; background:rgba(239,68,68,0.95); color:white; padding:12px; text-align:center; font-family:monospace; font-size:0.8rem; position:fixed; top:0; left:0; width:100%; z-index:99999; border-bottom:2px solid #ef4444; box-shadow:0 2px 10px rgba(0,0,0,0.5);">
+        <strong>CRITICAL DIAGNOSTIC ERROR:</strong> <span id="error-banner-msg"></span>
+        <span style="margin-left:15px; text-decoration:underline; cursor:pointer;" onclick="location.reload(true);">Force Refresh (Clear Cache)</span>
+    </div>
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            const banner = document.getElementById("global-js-error-banner");
+            const msgSpan = document.getElementById("error-banner-msg");
+            if (banner && msgSpan) {
+                msgSpan.textContent = message + " (" + source.split('/').pop() + ":" + lineno + ")";
+                banner.style.display = "block";
+            }
+            return false;
+        };
+    </script>
+
     <div class="bg-grid"></div>
     <div class="bg-radial"></div>
 

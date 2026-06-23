@@ -16,6 +16,7 @@ class DigitalTwinApp {
         this.slackEnabled = true;
         this.currentRole = "admin";
         this.liveApiMode = false;
+        this.activePodFailureName = null;
         
         // Mock data state for different clusters
         this.clusters = {
