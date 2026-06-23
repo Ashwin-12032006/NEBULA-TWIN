@@ -7,6 +7,12 @@ import { PipelineSimulator } from './modules/pipeline.js';
 import { TerraformSimulator } from './modules/terraform.js';
 import { LogsManager } from './modules/logs.js';
 import { AlertsManager } from './modules/alerts.js';
+import { DatabaseExplorer } from './modules/database.js';
+
+// Configuration: Remote deployed Spring Boot REST API
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? "http://localhost:8080"
+    : "https://nebula-twin-backend.up.railway.app"; // User can replace this with their actual deployed backend API URL
 
 class DigitalTwinApp {
     constructor() {
@@ -130,6 +136,8 @@ class DigitalTwinApp {
         this.terraform = new TerraformSimulator("tf-console", "tf-plan-btn", "tf-apply-btn");
         this.logs = new LogsManager("log-terminal-stream", "log-service-filter", "log-severity-filter", "log-search-query", "log-clear-btn");
         this.alerts = new AlertsManager("slack-messages-container", "metric-alerts");
+        this.databaseExplorer = new DatabaseExplorer("db-table-select", "db-refresh-btn", "db-active-table", "db-row-count", "db-data-table", "db-empty-msg");
+        this.databaseExplorer.setApiBaseUrl(API_BASE_URL);
 
         this.init();
     }
@@ -235,6 +243,8 @@ class DigitalTwinApp {
             apiToggle.addEventListener("change", (e) => {
                 this.liveApiMode = e.target.checked;
                 this.logs.pushLog("kube-system", "INFO", `Observability Source: Switch to ${this.liveApiMode ? 'Live EKS API' : 'Digital Twin Simulation'}`);
+                this.databaseExplorer.setLiveMode(this.liveApiMode);
+                this.databaseExplorer.loadActiveTable(this.state);
             });
         }
 
@@ -471,7 +481,7 @@ class DigitalTwinApp {
 
     async fetchLiveMetrics() {
         try {
-            const res = await fetch("http://localhost:8080/api/v1/cluster/status");
+            const res = await fetch(`${API_BASE_URL}/api/v1/cluster/status`);
             if (!res.ok) throw new Error(`HTTP status ${res.status}`);
             const data = await res.json();
             
@@ -511,7 +521,7 @@ class DigitalTwinApp {
 
             this.renderAll();
         } catch (err) {
-            this.logs.pushLog("kube-system", "ERROR", `API Connection failed: Unable to connect to Spring Boot server on http://localhost:8080. Fallback simulation active.`);
+            this.logs.pushLog("kube-system", "ERROR", `API Connection failed: Unable to connect to Spring Boot server on ${API_BASE_URL}. Fallback simulation active.`);
             console.error("Fetch live metrics failed: ", err);
             const apiToggle = document.getElementById("live-api-toggle");
             if (apiToggle) apiToggle.checked = false;
@@ -547,6 +557,8 @@ class DigitalTwinApp {
             this.pipeline.renderHistory();
         } else if (this.activeTab === "logs") {
             this.logs.filterAndRender();
+        } else if (this.activeTab === "database") {
+            this.databaseExplorer.loadActiveTable(this.state);
         }
     }
 
@@ -658,7 +670,7 @@ class DigitalTwinApp {
         if (this.liveApiMode) {
             try {
                 this.logs.pushLog("kube-system", "INFO", `API: Dispatching delete-pod request to Spring Boot controller...`);
-                const res = await fetch(`http://localhost:8080/api/v1/pods/restart?podName=${podName}`, { method: 'POST' });
+                const res = await fetch(`${API_BASE_URL}/api/v1/pods/restart?podName=${podName}`, { method: 'POST' });
                 if (!res.ok) throw new Error("HTTP restart error");
                 this.logs.pushLog("kube-system", "SUCCESS", `API: Kubernetes rollout command accepted for ${podName}.`);
             } catch (err) {

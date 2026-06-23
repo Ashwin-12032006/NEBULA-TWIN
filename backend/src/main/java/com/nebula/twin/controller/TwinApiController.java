@@ -5,6 +5,7 @@ import com.nebula.twin.service.PrometheusService;
 import com.nebula.twin.service.AlertService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.*;
 
@@ -20,6 +21,33 @@ public class TwinApiController {
 
     @Autowired
     private AlertService alertService;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    // Fetch raw table rows from database
+    @GetMapping("/db/table")
+    public List<Map<String, Object>> getTableRows(@RequestParam String tableName) {
+        List<String> allowedTables = Arrays.asList("users", "clusters", "nodes", "pods", "deployments", "alerts");
+        if (!allowedTables.contains(tableName.toLowerCase())) {
+            throw new IllegalArgumentException("Unauthorized table name: " + tableName);
+        }
+        
+        try {
+            // Sort by id for consistent ordering, falls back to raw select if no id column
+            if (tableName.equalsIgnoreCase("alerts")) {
+                return jdbcTemplate.queryForList("SELECT * FROM alerts ORDER BY created_at DESC LIMIT 100");
+            }
+            return jdbcTemplate.queryForList("SELECT * FROM " + tableName + " ORDER BY id ASC");
+        } catch (Exception e) {
+            try {
+                return jdbcTemplate.queryForList("SELECT * FROM " + tableName);
+            } catch (Exception ex) {
+                System.err.println("DB query failed for table " + tableName + ": " + ex.getMessage());
+                return new ArrayList<>();
+            }
+        }
+    }
 
     // Get Active Cluster telemetry status
     @GetMapping("/cluster/status")
