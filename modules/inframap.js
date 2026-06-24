@@ -14,8 +14,9 @@ export class InfraMapVisualizer {
 
     render(state) {
         const svgElement = this.svg.node();
-        const width = svgElement.getBoundingClientRect().width || 800;
-        const height = svgElement.getBoundingClientRect().height || 500;
+        const container = svgElement.parentElement;
+        const width = container.getBoundingClientRect().width || 800;
+        const height = container.getBoundingClientRect().height || 500;
         
         // Clear SVG
         this.svg.selectAll("*").remove();
@@ -238,6 +239,14 @@ export class InfraMapVisualizer {
             const statusColor = data.status === 'running' ? 'var(--color-green)' : (data.status === 'failed' ? 'var(--color-red)' : 'var(--color-yellow)');
             const logsBtnHtml = `<button class="btn btn-primary w-full mt-sm" onclick="document.querySelector('[data-tab=logs]').click(); document.getElementById('log-service-filter').value='${this.getServiceFromPod(data.pod_name)}'; document.getElementById('log-service-filter').dispatchEvent(new Event('change'));">View Container Logs</button>`;
             
+            const activeRole = (window.App && window.App.currentRole) || "admin";
+            const isViewer = activeRole === "viewer";
+            const actionBtnHtml = data.status === 'failed' 
+                ? (isViewer 
+                    ? `<div class="rbac-lock-badge mt-sm"><span>🔒</span> Action Locked (Viewer)</div>` 
+                    : `<button class="btn btn-green w-full mt-sm" id="btn-manual-restart" data-pod="${data.pod_name}">Restart Failed Pod</button>`)
+                : '';
+
             contentHtml = `
                 <div class="flex-column gap-md">
                     <div style="background:rgba(255,255,255,0.03); padding:10px; border-radius:var(--radius-md); border:1px solid ${statusColor};">
@@ -270,7 +279,7 @@ export class InfraMapVisualizer {
                     </div>
                     <div style="margin-top:5px;">
                         ${logsBtnHtml}
-                        ${data.status === 'failed' ? `<button class="btn btn-green w-full mt-sm" id="btn-manual-restart" data-pod="${data.pod_name}">Restart Failed Pod</button>` : ''}
+                        ${actionBtnHtml}
                     </div>
                 </div>
             `;

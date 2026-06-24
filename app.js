@@ -293,18 +293,30 @@ class DigitalTwinApp {
 
         // Custom window events triggered by sub-modules
         window.addEventListener("manual-pod-restart", (e) => {
+            if (this.currentRole === "viewer") {
+                this.showToast("Permission Denied: Viewer cannot restart pods.", "error");
+                return;
+            }
             const { podName } = e.detail;
             this.logs.pushLog("kube-system", "INFO", `Manual restart requested for pod ${podName}`);
             this.restartPod(podName, true);
         });
 
         window.addEventListener("manual-service-restart", (e) => {
+            if (this.currentRole === "viewer") {
+                this.showToast("Permission Denied: Viewer cannot restart services.", "error");
+                return;
+            }
             const { serviceId } = e.detail;
             this.logs.pushLog("kube-system", "INFO", `Manual service restart requested for ${serviceId}`);
             this.restartService(serviceId);
         });
 
         window.addEventListener("manual-service-kill", (e) => {
+            if (this.currentRole === "viewer" || this.currentRole === "developer") {
+                this.showToast(`Permission Denied: ${this.currentRole} cannot inject service faults.`, "error");
+                return;
+            }
             const { serviceId } = e.detail;
             this.logs.pushLog("kube-system", "INFO", `Manual fault injection requested for service ${serviceId}`);
             this.injectServiceFault(serviceId);
@@ -411,22 +423,60 @@ class DigitalTwinApp {
         this.renderAll();
     }
 
+    showToast(message, type = "info") {
+        const toast = document.createElement("div");
+        toast.className = `cyber-toast ${type}`;
+        
+        let icon = "ℹ️";
+        if (type === "success") icon = "✅";
+        else if (type === "warning") icon = "⚠️";
+        else if (type === "error") icon = "🔒";
+        
+        toast.innerHTML = `<span class="toast-icon">${icon}</span><span class="toast-message">${message}</span>`;
+        document.body.appendChild(toast);
+        
+        // Trigger reflow/animation
+        setTimeout(() => toast.classList.add("show"), 10);
+        
+        setTimeout(() => {
+            toast.classList.remove("show");
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 3000);
+    }
+
     updateRolePermissions() {
         const injectBtn = document.getElementById("inject-fault-btn");
         const deployBtn = document.getElementById("trigger-deploy-btn");
         const planBtn = document.getElementById("tf-plan-btn");
         const applyBtn = document.getElementById("tf-apply-btn");
+        
+        const autoHealToggle = document.getElementById("auto-healing-toggle");
+        const slackToggle = document.getElementById("slack-toggle");
+        const liveApiToggle = document.getElementById("live-api-toggle");
+        const simToggleBtn = document.getElementById("sim-toggle-btn");
 
         if (this.currentRole === "viewer") {
             if (injectBtn) injectBtn.disabled = true;
             if (deployBtn) deployBtn.disabled = true;
             if (planBtn) planBtn.disabled = true;
             if (applyBtn) applyBtn.disabled = true;
+            
+            if (autoHealToggle) autoHealToggle.disabled = true;
+            if (slackToggle) slackToggle.disabled = true;
+            if (liveApiToggle) liveApiToggle.disabled = true;
+            if (simToggleBtn) simToggleBtn.disabled = true;
         } else if (this.currentRole === "developer") {
             if (injectBtn) injectBtn.disabled = true;
             if (deployBtn) deployBtn.disabled = false;
             if (planBtn) planBtn.disabled = false;
             if (applyBtn) applyBtn.disabled = true; // Can plan but not apply
+            
+            if (autoHealToggle) autoHealToggle.disabled = true;
+            if (slackToggle) slackToggle.disabled = true;
+            if (liveApiToggle) liveApiToggle.disabled = false;
+            if (simToggleBtn) simToggleBtn.disabled = false;
         } else {
             // Admin or DevOps
             if (injectBtn) injectBtn.disabled = false;
@@ -434,7 +484,20 @@ class DigitalTwinApp {
             if (planBtn) planBtn.disabled = false;
             // Apply is only enabled if Plan was run
             if (applyBtn && this.terraform.planRan) applyBtn.disabled = false;
+            
+            if (autoHealToggle) autoHealToggle.disabled = false;
+            if (slackToggle) slackToggle.disabled = false;
+            if (liveApiToggle) liveApiToggle.disabled = false;
+            if (simToggleBtn) simToggleBtn.disabled = false;
         }
+
+        const roleDetails = {
+            viewer: "Viewer Mode: Read-Only dashboard. Mutation controls disabled.",
+            developer: "Developer Mode: Deploy & Plan enabled. Chaos & Apply blocked.",
+            devops: "DevOps Mode: Full infrastructure deployment and fault injection enabled.",
+            admin: "Admin Mode: Full root cluster permissions granted."
+        };
+        this.showToast(roleDetails[this.currentRole] || `Active Role: ${this.currentRole}`, this.currentRole === "viewer" ? "error" : "success");
     }
 
     tick() {

@@ -14,8 +14,9 @@ export class DependencyGraphVisualizer {
 
     render(state) {
         const svgElement = this.svg.node();
-        const width = svgElement.getBoundingClientRect().width || 800;
-        const height = svgElement.getBoundingClientRect().height || 500;
+        const container = svgElement.parentElement;
+        const width = container.getBoundingClientRect().width || 800;
+        const height = container.getBoundingClientRect().height || 500;
         
         // Clear SVG
         this.svg.selectAll("*").remove();
@@ -318,11 +319,23 @@ export class DependencyGraphVisualizer {
                     </div>
                 </div>
                 <div style="margin-top:10px;">
-                    ${service.status === 'failed' ? `
-                        <button class="btn btn-green w-full" id="btn-dep-restart" data-service="${service.id}">Trigger Hot-Fix Restart</button>
-                    ` : `
-                        <button class="btn btn-danger w-full" id="btn-dep-kill" data-service="${service.id}">Inject Outage Fault</button>
-                    `}
+                    ${(() => {
+                        const activeRole = (window.App && window.App.currentRole) || "admin";
+                        const isViewer = activeRole === "viewer";
+                        const isDev = activeRole === "developer";
+                        
+                        if (service.status === 'failed') {
+                            if (isViewer) {
+                                return `<div class="rbac-lock-badge"><span>🔒</span> Restart Locked (Viewer)</div>`;
+                            }
+                            return `<button class="btn btn-green w-full" id="btn-dep-restart" data-service="${service.id}">Trigger Hot-Fix Restart</button>`;
+                        } else {
+                            if (isViewer || isDev) {
+                                return `<div class="rbac-lock-badge"><span>🔒</span> Outage Injection Locked (${isViewer ? 'Viewer' : 'Developer'})</div>`;
+                            }
+                            return `<button class="btn btn-danger w-full" id="btn-dep-kill" data-service="${service.id}">Inject Outage Fault</button>`;
+                        }
+                    })()}
                 </div>
             `;
         } else {
