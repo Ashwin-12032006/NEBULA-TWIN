@@ -526,6 +526,7 @@ class DigitalTwinApp {
             const apiToggle = document.getElementById("live-api-toggle");
             if (apiToggle) apiToggle.checked = false;
             this.liveApiMode = false;
+            this.databaseExplorer.setLiveMode(false);
         }
     }
 
