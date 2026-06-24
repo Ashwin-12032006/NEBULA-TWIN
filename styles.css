@@ -664,8 +664,8 @@ header {
 
 .node-group:hover rect {
     stroke: var(--color-cyan);
-    fill: #1a233b;
-    filter: drop-shadow(0 0 8px rgba(0, 210, 255, 0.2));
+    fill: rgba(26, 35, 59, 0.95);
+    filter: drop-shadow(0 0 10px rgba(0, 210, 255, 0.35));
 }
 
 .node-group.failed rect {
@@ -765,8 +765,8 @@ header {
 
 .service-node:hover rect {
     stroke: var(--color-cyan);
-    fill: rgba(28, 38, 62, 0.95);
-    filter: drop-shadow(0 0 10px rgba(0, 210, 255, 0.25));
+    fill: rgba(28, 38, 62, 0.98);
+    filter: drop-shadow(0 0 14px rgba(0, 210, 255, 0.45));
 }
 
 .service-node.failed rect {
@@ -1605,11 +1605,21 @@ header {
     .infra-viewport, .dependency-viewport {
         height: 50vh !important;
         min-height: 300px;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+
+    #infra-svg, #dependency-svg {
+        height: auto !important;
     }
 
     .infra-sidebar, .dependency-sidebar {
         width: 100% !important;
         height: auto !important;
+    }
+
+    .metric-pill-label, .metric-pill-value {
+        white-space: nowrap !important;
     }
 
     /* Heatmaps */

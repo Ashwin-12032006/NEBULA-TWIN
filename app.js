@@ -375,6 +375,15 @@ class DigitalTwinApp {
                 shell.classList.remove("sidebar-open", "slack-open");
             });
         }
+
+        // Re-render D3 components on window resize (debounced to avoid performance lag)
+        let resizeTimer;
+        window.addEventListener("resize", () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                this.renderAll();
+            }, 150);
+        });
     }
 
     switchTab(tab) {

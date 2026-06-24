@@ -47,9 +47,27 @@ export class DependencyGraphVisualizer {
             .attr("d", "M0,-4L10,0L0,4")
             .attr("fill", "var(--color-red)");
 
-        // 1. Define Nodes with fixed coordinates
+        const isMobile = width < 600;
         const midX = width / 2;
-        const nodes = [
+        
+        // Dynamically scale SVG height for mobile grid stacking
+        const dynamicHeight = isMobile ? 420 : 440;
+        this.svg.attr("height", dynamicHeight);
+
+        // 1. Define Nodes with responsive coordinates
+        const nodes = isMobile ? [
+            { id: "frontend", name: "Frontend Client", type: "ui", x: midX, y: 40, w: 110, h: 36 },
+            { id: "gateway", name: "API Gateway", type: "gateway", x: midX, y: 105, w: 110, h: 36 },
+            
+            { id: "user-service", name: "User Service", type: "service", x: midX - 70, y: 180, w: 110, h: 40 },
+            { id: "order-service", name: "Order Service", type: "service", x: midX + 70, y: 180, w: 110, h: 40 },
+            { id: "payment-service", name: "Payment Service", type: "service", x: midX - 70, y: 255, w: 110, h: 40 },
+            { id: "notification-service", name: "Notification Service", type: "service", x: midX + 70, y: 255, w: 110, h: 40 },
+            
+            { id: "redis", name: "Redis", type: "cache", x: midX - 90, y: 350, w: 75, h: 36 },
+            { id: "postgresql", name: "PostgreSQL", type: "db", x: midX, y: 350, w: 75, h: 36 },
+            { id: "kafka", name: "Kafka", type: "broker", x: midX + 90, y: 350, w: 75, h: 36 }
+        ] : [
             { id: "frontend", name: "Frontend Client", type: "ui", x: midX, y: 50, w: 120, h: 40 },
             { id: "gateway", name: "API Gateway", type: "gateway", x: midX, y: 130, w: 120, h: 40 },
             

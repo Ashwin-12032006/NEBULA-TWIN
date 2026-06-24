@@ -24,12 +24,22 @@ export class InfraMapVisualizer {
         const db = state.database || {};
         
         // Setup margins and positions
-        const padding = 30;
-        const nodeWidth = 220;
+        const isMobile = width < 600;
+        const cols = isMobile ? 1 : 2;
+        const padding = isMobile ? 15 : 30;
+        const nodeWidth = isMobile ? Math.min(280, width - padding * 2) : 220;
         const nodeHeight = 160;
-        const cols = 2;
-        const xSpacing = (width - padding * 2 - nodeWidth * cols) / (cols - 1 || 1);
-        const ySpacing = 50;
+        const ySpacing = isMobile ? 25 : 50;
+        
+        const xSpacing = isMobile ? 0 : (width - padding * 2 - nodeWidth * cols) / (cols - 1 || 1);
+        
+        const rows = Math.ceil(nodes.length / cols);
+        const dbHeight = 60;
+        const dynamicHeight = isMobile
+            ? (60 + rows * (nodeHeight + ySpacing) + dbHeight + 40)
+            : height;
+            
+        this.svg.attr("height", dynamicHeight);
 
         // Draw Cluster Title & Info
         this.svg.append("text")
@@ -44,7 +54,7 @@ export class InfraMapVisualizer {
         nodes.forEach((node, index) => {
             const col = index % cols;
             const row = Math.floor(index / cols);
-            const x = padding + col * (nodeWidth + xSpacing);
+            const x = isMobile ? (width - nodeWidth) / 2 : padding + col * (nodeWidth + xSpacing);
             const y = 60 + row * (nodeHeight + ySpacing);
 
             const isNodeHealthy = node.pods.every(p => p.status === 'running');
@@ -131,7 +141,7 @@ export class InfraMapVisualizer {
         // Render Database Node (Slightly separated at the bottom center)
         if (db && db.name) {
             const dbX = width / 2 - 100;
-            const dbY = height - 90;
+            const dbY = isMobile ? (dynamicHeight - 80) : (height - 90);
 
             const dbGroup = this.svg.append("g")
                 .attr("class", "node-group")
