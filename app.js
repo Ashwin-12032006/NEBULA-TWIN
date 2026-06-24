@@ -928,8 +928,9 @@ class DigitalTwinApp {
         this.alerts.triggerAlert(severity, service, podName, cluster, message);
         if (this.voiceAlertsEnabled) {
             let speechText = "";
-            if (severity === "CRITICAL") {
-                speechText = `Warning! Outage detected on ${service.replace("-", " ")} pod ${podName.split("-").slice(-1)[0]}. Self healing sequence initiated.`;
+            if (severity === "CRITICAL" && service && podName) {
+                const podShort = podName.includes("-") ? podName.split("-").slice(-1)[0] : podName;
+                speechText = `Warning! Outage detected on ${service.replace("-", " ")} pod ${podShort}. Self healing sequence initiated.`;
             } else {
                 speechText = message;
             }
@@ -938,9 +939,11 @@ class DigitalTwinApp {
     }
 
     resolveAlert(podName) {
+        if (!podName) return;
         this.alerts.resolveAlert(podName);
         if (this.voiceAlertsEnabled) {
-            this.speak(`System recovery complete. Pod ${podName.split("-").slice(-1)[0]} is now healthy.`);
+            const podShort = podName.includes("-") ? podName.split("-").slice(-1)[0] : podName;
+            this.speak(`System recovery complete. Pod ${podShort} is now healthy.`);
         }
     }
 
