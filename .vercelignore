@@ -1,0 +1,6 @@
+# Prevent Vercel from treating this as a Node.js/Serverless project
+server.js
+package.json
+
+# Exclude backend source files from the frontend deployment
+backend/
