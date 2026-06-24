@@ -34,6 +34,28 @@
     <div class="bg-radial"></div>
 
     <div id="app-shell">
+        <!-- Mobile Overlay -->
+        <div class="mobile-overlay" id="mobile-overlay"></div>
+
+        <!-- Mobile Header Bar -->
+        <div class="mobile-header-bar">
+            <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Toggle Menu">
+                <svg viewBox="0 0 24 24" style="width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2;"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <div class="mobile-brand">
+                <svg class="brand-logo-small" viewBox="0 0 100 100" style="width:20px; height:20px; fill:var(--color-cyan); filter: drop-shadow(0 0 3px var(--color-cyan-glow)); display:inline-block; vertical-align:middle; margin-right:6px;">
+                    <circle cx="50" cy="50" r="40" stroke="currentColor" stroke-width="2" stroke-dasharray="10 5" fill="none" />
+                    <polygon points="50,15 90,80 10,80" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round" />
+                    <circle cx="50" cy="50" r="10" fill="currentColor" />
+                </svg>
+                <span class="mobile-brand-name" style="font-weight:800; font-size:0.9rem; letter-spacing:1px; background: linear-gradient(to right, var(--text-primary), var(--color-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">NEBULA-TWIN</span>
+            </div>
+            <button class="mobile-slack-toggle" id="mobile-slack-toggle" aria-label="Toggle Alerts" style="position:relative;">
+                <span class="slack-unread-badge" id="slack-unread-badge" style="display:none; position:absolute; top:-6px; right:-6px; background:var(--color-red); color:white; font-size:0.55rem; font-weight:700; padding:2px 5px; border-radius:10px; border:1px solid var(--bg-darker); line-height:1;">0</span>
+                <svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </button>
+        </div>
+
         <!-- Sidebar Navigation -->
         <sidebar>
             <div class="brand">

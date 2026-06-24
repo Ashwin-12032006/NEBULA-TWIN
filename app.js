@@ -178,6 +178,12 @@ class DigitalTwinApp {
                 e.preventDefault();
                 const tab = link.getAttribute("data-tab");
                 this.switchTab(tab);
+
+                // Auto-close navigation drawer on mobile
+                const shell = document.getElementById("app-shell");
+                if (shell) {
+                    shell.classList.remove("sidebar-open");
+                }
             });
         });
 
@@ -334,6 +340,41 @@ class DigitalTwinApp {
                 this.infraMap.inspectElement('node', nodeRaw);
             }
         });
+
+        // Mobile Drawer Event Listeners
+        const navToggle = document.getElementById("mobile-nav-toggle");
+        const slackToggle = document.getElementById("mobile-slack-toggle");
+        const overlay = document.getElementById("mobile-overlay");
+        const shell = document.getElementById("app-shell");
+
+        if (navToggle && shell) {
+            navToggle.addEventListener("click", () => {
+                shell.classList.toggle("sidebar-open");
+                shell.classList.remove("slack-open");
+            });
+        }
+
+        if (slackToggle && shell) {
+            slackToggle.addEventListener("click", () => {
+                shell.classList.toggle("slack-open");
+                shell.classList.remove("sidebar-open");
+
+                // Clear unread badge when opened
+                if (shell.classList.contains("slack-open")) {
+                    const badge = document.getElementById("slack-unread-badge");
+                    if (badge) {
+                        badge.textContent = "0";
+                        badge.style.display = "none";
+                    }
+                }
+            });
+        }
+
+        if (overlay && shell) {
+            overlay.addEventListener("click", () => {
+                shell.classList.remove("sidebar-open", "slack-open");
+            });
+        }
     }
 
     switchTab(tab) {

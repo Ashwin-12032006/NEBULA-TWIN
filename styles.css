@@ -1350,3 +1350,301 @@ header {
     transform: translateX(18px);
     background-color: var(--color-green);
 }
+
+/* ==========================================================================
+   MOBILE & TABLET RESPONSIVENESS DESIGN SYSTEM
+   ========================================================================== */
+
+/* Mobile Top Header Elements (Hidden on Desktop) */
+.mobile-header-bar {
+    display: none;
+    height: 56px;
+    background-color: var(--bg-dark);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    z-index: 20;
+    flex-shrink: 0;
+    width: 100%;
+}
+
+.mobile-nav-toggle, .mobile-slack-toggle {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: var(--radius-sm);
+    transition: var(--transition-fast);
+}
+
+.mobile-nav-toggle:hover, .mobile-slack-toggle:hover {
+    color: var(--color-cyan);
+    background: rgba(0, 210, 255, 0.05);
+}
+
+.mobile-brand {
+    display: flex;
+    align-items: center;
+}
+
+.mobile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(5, 7, 10, 0.7);
+    backdrop-filter: blur(3px);
+    z-index: 12;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-normal);
+}
+
+/* Open states for overlays */
+.sidebar-open .mobile-overlay,
+.slack-open .mobile-overlay {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Tablet Responsive Design (Screen width between 769px and 1024px) */
+@media (max-width: 1024px) {
+    /* Collapse Sidebar to Compact Icon-Only mode */
+    sidebar {
+        width: 70px !important;
+        overflow: visible;
+    }
+    
+    sidebar .brand {
+        justify-content: center;
+        padding: 15px 5px;
+    }
+    
+    sidebar .brand div,
+    sidebar .sidebar-section,
+    sidebar .sidebar-footer,
+    sidebar .menu-link span {
+        display: none !important;
+    }
+    
+    sidebar .menu-link {
+        justify-content: center;
+        padding: 12px;
+    }
+
+    /* Hide Slack Dock on Tablet (Make it Drawer overlay) */
+    .slack-dock {
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 100vh;
+        z-index: 15;
+        transform: translateX(100%);
+        transition: transform var(--transition-normal);
+        box-shadow: -5px 0 25px rgba(0, 0, 0, 0.6);
+        border-left: 1px solid var(--border-color);
+        background-color: rgba(14, 19, 31, 0.98);
+    }
+    
+    .slack-open .slack-dock {
+        transform: translateX(0);
+    }
+
+    /* Adjust main layout and split panes */
+    .ai-layout {
+        grid-template-columns: 1fr !important;
+    }
+
+    .terraform-layout {
+        grid-template-columns: 1fr !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+    
+    .terraform-layout .tf-code-pane {
+        height: 50vh !important;
+    }
+
+    #pipeline-pane > div {
+        grid-template-columns: 1fr !important;
+        height: auto !important;
+    }
+}
+
+/* Mobile Responsive Design (Screen width 768px and below) */
+@media (max-width: 768px) {
+    body {
+        overflow-y: hidden;
+    }
+
+    #app-shell {
+        flex-direction: column !important;
+        height: 100vh !important;
+        overflow: hidden !important;
+    }
+
+    /* Show Top Navigation Header */
+    .mobile-header-bar {
+        display: flex !important;
+    }
+
+    /* Hide Sidebar completely (Make it slide-out Left drawer) */
+    sidebar {
+        position: fixed !important;
+        top: 56px !important;
+        left: 0 !important;
+        height: calc(100vh - 56px) !important;
+        width: 260px !important;
+        z-index: 15 !important;
+        transform: translateX(-100%) !important;
+        transition: transform var(--transition-normal) !important;
+        background-color: rgba(14, 19, 31, 0.98) !important;
+        box-shadow: 5px 0 25px rgba(0, 0, 0, 0.6) !important;
+        border-right: 1px solid var(--border-color) !important;
+    }
+    
+    .sidebar-open sidebar {
+        transform: translateX(0) !important;
+    }
+
+    /* Restore sidebar elements in drawer mode */
+    sidebar .brand {
+        display: none !important; /* Hide original brand logo since top bar has it */
+    }
+    
+    sidebar .sidebar-section,
+    sidebar .sidebar-footer,
+    sidebar .menu-link span {
+        display: block !important;
+    }
+
+    sidebar .menu-link {
+        justify-content: flex-start !important;
+        padding: 10px 15px !important;
+    }
+
+    /* Hide Slack Dock (Make it slide-out Right drawer) */
+    .slack-dock {
+        position: fixed !important;
+        top: 56px !important;
+        right: 0 !important;
+        height: calc(100vh - 56px) !important;
+        width: 300px !important;
+        z-index: 15 !important;
+        transform: translateX(100%) !important;
+        transition: transform var(--transition-normal) !important;
+        background-color: rgba(14, 19, 31, 0.98) !important;
+        box-shadow: -5px 0 25px rgba(0, 0, 0, 0.6) !important;
+        border-left: 1px solid var(--border-color) !important;
+    }
+
+    .slack-open .slack-dock {
+        transform: translateX(0) !important;
+    }
+
+    /* Main Container Flow */
+    main {
+        height: calc(100vh - 56px) !important;
+        overflow: hidden !important;
+    }
+
+    header {
+        padding: 10px 15px !important;
+        gap: 10px !important;
+    }
+
+    .header-metrics {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 5px;
+        gap: 15px !important;
+        justify-content: flex-start;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .header-metrics::-webkit-scrollbar {
+        height: 2px;
+    }
+    
+    .metric-pill {
+        flex-shrink: 0;
+        align-items: flex-start !important;
+    }
+
+    /* Dashboard pane content scroll overrides */
+    .dashboard-content {
+        padding: 15px !important;
+        overflow-y: auto !important;
+    }
+
+    .tab-pane {
+        height: auto !important;
+        overflow-y: visible !important;
+    }
+
+    /* Grid Stacking */
+    .grid-container {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+    }
+
+    /* Map and Graph Viewports */
+    .infra-layout, .dependency-layout {
+        flex-direction: column !important;
+        height: auto !important;
+        gap: 15px !important;
+    }
+
+    .infra-viewport, .dependency-viewport {
+        height: 50vh !important;
+        min-height: 300px;
+    }
+
+    .infra-sidebar, .dependency-sidebar {
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    /* Heatmaps */
+    .heatmap-container {
+        gap: 15px !important;
+    }
+
+    /* Pipeline / CI/CD node step resizing */
+    .pipeline-step-node div {
+        width: 30px !important;
+        height: 30px !important;
+        font-size: 0.7rem !important;
+    }
+    .pipeline-step-node span {
+        font-size: 0.55rem !important;
+    }
+
+    /* Centralized Log Filters wrapping */
+    .card-actions {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        width: 100% !important;
+        gap: 8px !important;
+    }
+    
+    .card-actions select, 
+    .card-actions input, 
+    .card-actions button {
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    /* Database Table Responsive Scroll */
+    #db-data-table {
+        min-width: 600px;
+    }
+}
+

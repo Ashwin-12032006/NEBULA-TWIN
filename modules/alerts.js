@@ -100,6 +100,18 @@ export class AlertsManager {
 
         this.slackContainer.appendChild(msg);
         this.slackContainer.scrollTop = this.slackContainer.scrollHeight;
+
+        // Update unread count for mobile drawer button if not open
+        const shell = document.getElementById("app-shell");
+        if (shell && !shell.classList.contains("slack-open")) {
+            const badge = document.getElementById("slack-unread-badge");
+            if (badge) {
+                let count = parseInt(badge.textContent) || 0;
+                count++;
+                badge.textContent = count;
+                badge.style.display = "block";
+            }
+        }
     }
 
     sendSlackResolution(alert) {
@@ -132,5 +144,17 @@ export class AlertsManager {
 
         this.slackContainer.appendChild(msg);
         this.slackContainer.scrollTop = this.slackContainer.scrollHeight;
+
+        // Update unread count for mobile drawer button if not open
+        const shell = document.getElementById("app-shell");
+        if (shell && !shell.classList.contains("slack-open")) {
+            const badge = document.getElementById("slack-unread-badge");
+            if (badge) {
+                let count = parseInt(badge.textContent) || 0;
+                count++;
+                badge.textContent = count;
+                badge.style.display = "block";
+            }
+        }
     }
 }
