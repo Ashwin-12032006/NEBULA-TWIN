@@ -1,5 +1,13 @@
 -- Cloud Environment Digital Twin Database Schema
 
+-- Drop existing tables to ensure schema changes are applied cleanly
+DROP TABLE IF EXISTS pods CASCADE;
+DROP TABLE IF EXISTS nodes CASCADE;
+DROP TABLE IF EXISTS clusters CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS deployments CASCADE;
+DROP TABLE IF EXISTS alerts CASCADE;
+
 -- 1. Users table
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
