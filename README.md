@@ -4,7 +4,7 @@
 ---
 
 ## 🔗 Live Production Deployments
-* **Interactive Dashboard (Vercel)**: [https://nebula-twin.vercel.app/](https://nebula-twin.vercel.app/)
+* **Interactive Dashboard (Vercel)**: [https://nebula-twin-r0wfsltl1-ashwin-12032006s-projects.vercel.app/](https://nebula-twin-r0wfsltl1-ashwin-12032006s-projects.vercel.app/)
 * **REST API & Telemetry Engine (Railway)**: [https://nebula-twin-production.up.railway.app/](https://nebula-twin-production.up.railway.app/)
 
 ---
