@@ -12,7 +12,7 @@ import { DatabaseExplorer } from './modules/database.js';
 // Configuration: Remote deployed Spring Boot REST API
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? "http://localhost:8080"
-    : "https://nebula-twin-backend.up.railway.app"; // User can replace this with their actual deployed backend API URL
+    : "https://nebula-twin-production.up.railway.app"; // User's generated public backend endpoint
 
 class DigitalTwinApp {
     constructor() {
