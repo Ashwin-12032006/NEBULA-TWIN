@@ -241,3 +241,55 @@ jobs:
       run: |
         aws s3 sync . s3://nebula-twin-frontend-prod --exclude "backend/*" --exclude ".git/*" --exclude "node_modules/*"
         aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DIST_ID }} --paths "/*"
+
+---
+
+## ⚡ Alternative Deployment: Railway (Backend & DB) + Vercel (Frontend)
+
+For quick, low-cost serverless hosting, you can deploy the database and Spring Boot backend to **Railway.app** and host the frontend dashboard on **Vercel.com**.
+
+### Step 1: Deploy PostgreSQL Database on Railway
+1. Sign up/log in to **[Railway.app](https://railway.app)**.
+2. Click **New Project** &rarr; **Provision PostgreSQL**.
+3. Once initialized, click on the **PostgreSQL** box, go to the **Variables** tab, and copy the DB connection parameters:
+   - Host name (e.g. `viaduct.proxy.rlwy.net`)
+   - Port (e.g. `5432` or custom)
+   - Database Name (e.g. `railway`)
+   - Username (e.g. `postgres`)
+   - Password (provided by Railway)
+
+### Step 2: Deploy Spring Boot Backend on Railway
+1. Click **New** &rarr; **GitHub Repo** and connect your `NEBULA-TWIN` repository.
+2. Click on the newly imported service box, go to **Settings**:
+   - Set **Root Directory** to `backend`.
+3. Go to the **Variables** tab and add the environment variables that map your Railway database parameters to Spring Boot configurations:
+   - `SPRING_DATASOURCE_URL` = `jdbc:postgresql://<YOUR_RAILWAY_DB_HOST>:<PORT>/railway`
+   - `SPRING_DATASOURCE_USERNAME` = `postgres`
+   - `SPRING_DATASOURCE_PASSWORD` = `<YOUR_RAILWAY_DB_PASSWORD>`
+   - `SLACK_WEBHOOK_URL` = `https://hooks.slack.com/services/YOUR/WEBHOOK/URL`
+4. Railway will automatically compile your Java Spring Boot application using Maven, configure table schemas via `schema.sql`, and deploy it.
+5. In **Settings**, click **Generate Domain** to get your public REST API URL (e.g., `https://nebula-twin-backend-production.up.railway.app`).
+
+### Step 3: Configure Frontend Target API
+1. Open the [app.js](file:///d:/DEV/app.js) file.
+2. Update the `API_BASE_URL` constant at the top of the file to point to your new public Railway backend domain:
+   ```javascript
+   const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+       ? "http://localhost:8080"
+       : "https://nebula-twin-backend-production.up.railway.app"; // Replace with your Railway public URL
+   ```
+3. Commit and push the changes:
+   ```bash
+   git add app.js
+   git commit -m "config: set production API endpoint target to Railway app"
+   git push origin main
+   ```
+
+### Step 4: Deploy Frontend on Vercel
+1. Log in to **[Vercel.com](https://vercel.com)**.
+2. Click **Add New** &rarr; **Project**.
+3. Import your `NEBULA-TWIN` repository from GitHub.
+4. Set **Framework Preset** to **Other** (since this is a pure HTML/CSS/JS frontend).
+5. Leave the root directory as `./` (Vercel will deploy using the `index.html` and `vercel.json` configurations in the root directory).
+6. Click **Deploy**. Vercel will build and launch your dashboard globally!
+
