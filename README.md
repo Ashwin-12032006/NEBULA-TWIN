@@ -1,6 +1,14 @@
 # NEBULA-TWIN: Cloud Environment Digital Twin
 ### AI-Powered Real-Time Infrastructure Observability & Self-Healing Platform
 
+---
+
+## 🔗 Live Production Deployments
+* **Interactive Dashboard (Vercel)**: [https://nebula-twin.vercel.app/](https://nebula-twin.vercel.app/)
+* **REST API & Telemetry Engine (Railway)**: [https://nebula-twin-production.up.railway.app/](https://nebula-twin-production.up.railway.app/)
+
+---
+
 Nebula-Twin is a next-generation Cloud Digital Twin platform designed to provide DevOps, SRE, and Cloud Infrastructure teams with a unified, real-time virtual representation of their Kubernetes cluster, cloud resources, service dependency relationships, deployment pipelines, and backing datastores. 
 
 Equipped with a predictive anomaly-detection engine and self-healing automation, Nebula-Twin detects imminent container failures before they propagate, sends rich alert integrations to Slack, and runs automated rollouts to restore service health.
