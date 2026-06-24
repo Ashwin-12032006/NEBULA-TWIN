@@ -343,7 +343,7 @@ class DigitalTwinApp {
 
         // Mobile Drawer Event Listeners
         const navToggle = document.getElementById("mobile-nav-toggle");
-        const slackToggle = document.getElementById("mobile-slack-toggle");
+        const mobileSlackToggle = document.getElementById("mobile-slack-toggle");
         const overlay = document.getElementById("mobile-overlay");
         const shell = document.getElementById("app-shell");
 
@@ -354,8 +354,8 @@ class DigitalTwinApp {
             });
         }
 
-        if (slackToggle && shell) {
-            slackToggle.addEventListener("click", () => {
+        if (mobileSlackToggle && shell) {
+            mobileSlackToggle.addEventListener("click", () => {
                 shell.classList.toggle("slack-open");
                 shell.classList.remove("sidebar-open");
 
