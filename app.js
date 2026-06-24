@@ -23,6 +23,7 @@ class DigitalTwinApp {
         this.currentRole = "admin";
         this.liveApiMode = false;
         this.activePodFailureName = null;
+        this.voiceAlertsEnabled = true;
         
         // Mock data state for different clusters
         this.clusters = {
@@ -159,6 +160,7 @@ class DigitalTwinApp {
     init() {
         this.logs.prefillLogs();
         this.setupAppListeners();
+        this.setupCopilot();
         
         // Start simulation tick loop (every 1.5 seconds)
         this.tickInterval = setInterval(() => {
@@ -215,7 +217,7 @@ class DigitalTwinApp {
 
                 // Logs cluster context change
                 this.logs.pushLog("kube-system", "INFO", `Kube-context changed from ${prevCluster} to ${this.state.cluster_name}`);
-                this.alerts.resolveAlert(this.activePodFailureName); // Reset active alert tracking
+                this.resolveAlert(this.activePodFailureName); // Reset active alert tracking
 
                 // Populate AI dropdown for the new cluster context
                 this.aiPredictor.populateSelect(this.state);
@@ -286,7 +288,7 @@ class DigitalTwinApp {
                     this.logs.pushLog("kube-system", "INFO", `Rolling upgrade rollout successful. Pods upgraded to release ${version}`);
                     
                     // Trigger Slack deploy success webhook
-                    this.alerts.triggerAlert("INFO", "pipeline", "Jenkins CI/CD", this.state.cluster_name, `Deployment succeeded: version ${version} rolled out to cluster`);
+                    this.triggerAlert("INFO", "pipeline", "Jenkins CI/CD", this.state.cluster_name, `Deployment succeeded: version ${version} rolled out to cluster`);
                 }, this.currentRole);
             });
         }
@@ -385,6 +387,15 @@ class DigitalTwinApp {
         if (overlay && shell) {
             overlay.addEventListener("click", () => {
                 shell.classList.remove("sidebar-open", "slack-open");
+            });
+        }
+
+        const voiceToggle = document.getElementById("voice-alerts-toggle");
+        if (voiceToggle) {
+            this.voiceAlertsEnabled = voiceToggle.checked;
+            voiceToggle.addEventListener("change", (e) => {
+                this.voiceAlertsEnabled = e.target.checked;
+                this.logs.pushLog("kube-system", "INFO", `Voice Alerts: ${this.voiceAlertsEnabled ? "ENABLED" : "DISABLED"}`);
             });
         }
 
@@ -532,7 +543,7 @@ class DigitalTwinApp {
                             this.failQueue.delete(pod.pod_name);
                             
                             this.logs.pushLog(pod.service, "ERROR", `FATAL: java.lang.OutOfMemoryError: Java heap space. Container crashed.`);
-                            this.alerts.triggerAlert("CRITICAL", pod.service, pod.pod_name, this.state.cluster_name, `Pod ${pod.pod_name} has crashed (CrashLoopBackOff)`);
+                            this.triggerAlert("CRITICAL", pod.service, pod.pod_name, this.state.cluster_name, `Pod ${pod.pod_name} has crashed (CrashLoopBackOff)`);
                             
                             // Auto-heal schedule
                             if (this.autoHealingEnabled) {
@@ -684,14 +695,24 @@ class DigitalTwinApp {
         let sumCpu = 0;
         let sumMem = 0;
 
+        let resiliency = 100;
         this.state.nodes.forEach(node => {
             podCount += node.pods.length;
             node.pods.forEach(pod => {
-                if (pod.status === "running") runningPods++;
+                if (pod.status === "running") {
+                    runningPods++;
+                } else if (pod.status === "failed") {
+                    if (pod.pod_name.includes("postgresql") || pod.pod_name.includes("database")) {
+                        resiliency -= 50;
+                    } else {
+                        resiliency -= 10;
+                    }
+                }
                 sumCpu += pod.cpu;
                 sumMem += Math.floor((pod.memory / 512) * 100);
             });
         });
+        resiliency = Math.max(0, resiliency);
 
         const clusterCpu = Math.floor(sumCpu / (podCount || 1));
         const clusterMem = Math.floor(sumMem / (podCount || 1));
@@ -701,6 +722,27 @@ class DigitalTwinApp {
         document.getElementById("metric-pods").textContent = `${runningPods} / ${podCount}`;
         document.getElementById("metric-cpu").textContent = `${clusterCpu}%`;
         document.getElementById("metric-memory").textContent = `${clusterMem}%`;
+        document.getElementById("metric-alerts").textContent = activeAlertsCount;
+
+        // Update Resiliency Index
+        const resEl = document.getElementById("metric-resiliency");
+        const resTrend = document.getElementById("metric-resiliency-trend");
+        if (resEl && resTrend) {
+            resEl.textContent = `${resiliency}%`;
+            if (resiliency === 100) {
+                resEl.style.color = "var(--color-green)";
+                resTrend.textContent = "▲";
+                resTrend.style.color = "var(--color-green)";
+            } else if (resiliency >= 75) {
+                resEl.style.color = "var(--color-yellow)";
+                resTrend.textContent = "▼";
+                resTrend.style.color = "var(--color-yellow)";
+            } else {
+                resEl.style.color = "var(--color-red)";
+                resTrend.textContent = "▼";
+                resTrend.style.color = "var(--color-red)";
+            }
+        }
 
         // Update header warning dot
         const headerDot = document.getElementById("cluster-status-dot");
@@ -713,9 +755,19 @@ class DigitalTwinApp {
         }
     }
 
+    triggerGlitchEffect() {
+        const glitch = document.getElementById("glitch-overlay");
+        if (glitch) {
+            glitch.classList.add("active");
+            setTimeout(() => {
+                glitch.classList.remove("active");
+            }, 800);
+        }
+    }
+
     injectRandomFault() {
         if (this.currentRole === "viewer" || this.currentRole === "developer") {
-            alert("RBAC Error: Developer and Viewer identity roles do not have credentials to inject cluster faults.");
+            this.showToast(`Permission Denied: ${this.currentRole} cannot inject cluster faults.`, "error");
             return;
         }
 
@@ -738,6 +790,7 @@ class DigitalTwinApp {
     injectPodFault(podName) {
         if (this.failQueue.has(podName)) return;
 
+        this.triggerGlitchEffect();
         this.logs.pushLog("kube-system", "WARN", `Stress anomaly detected on pod ${podName}. Memory load increasing.`);
         
         // Ramps up over 4 ticks (approx 6 seconds) to simulate AI detection slope
@@ -763,6 +816,7 @@ class DigitalTwinApp {
         });
 
         if (podName) {
+            this.triggerGlitchEffect();
             this.injectPodFault(podName);
         }
     }
@@ -821,7 +875,7 @@ class DigitalTwinApp {
             podObj.memory = baseMem;
 
             this.logs.pushLog("kube-system", "INFO", `Pod container ${podName} is now Healthy. Health check probes PASSED.`);
-            this.alerts.resolveAlert(podName);
+            this.resolveAlert(podName);
 
             // If we are currently inspecting this pod in inspector, refresh inspector display
             if (this.infraMap.selectedElement && this.infraMap.selectedElement.data.pod_name === podName) {
@@ -848,6 +902,190 @@ class DigitalTwinApp {
                 }
             });
         });
+    }
+
+    speak(message) {
+        if (!this.voiceAlertsEnabled || !window.speechSynthesis) return;
+        
+        // Cancel ongoing speak to avoid queuing up massive delays during high-frequency alerts
+        window.speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.rate = 1.05;
+        utterance.pitch = 0.95; // slightly lower pitch for digitized robot feel
+        
+        // Find a suitable English speaker voice
+        const voices = window.speechSynthesis.getVoices();
+        const preferredVoice = voices.find(v => v.lang.startsWith("en") && (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Zira") || v.name.includes("David")));
+        if (preferredVoice) {
+            utterance.voice = preferredVoice;
+        }
+        
+        window.speechSynthesis.speak(utterance);
+    }
+
+    triggerAlert(severity, service, podName, cluster, message) {
+        this.alerts.triggerAlert(severity, service, podName, cluster, message);
+        if (this.voiceAlertsEnabled) {
+            let speechText = "";
+            if (severity === "CRITICAL") {
+                speechText = `Warning! Outage detected on ${service.replace("-", " ")} pod ${podName.split("-").slice(-1)[0]}. Self healing sequence initiated.`;
+            } else {
+                speechText = message;
+            }
+            this.speak(speechText);
+        }
+    }
+
+    resolveAlert(podName) {
+        this.alerts.resolveAlert(podName);
+        if (this.voiceAlertsEnabled) {
+            this.speak(`System recovery complete. Pod ${podName.split("-").slice(-1)[0]} is now healthy.`);
+        }
+    }
+
+    setupCopilot() {
+        const widget = document.getElementById("copilot-widget");
+        const toggleBtn = document.getElementById("copilot-toggle-btn");
+        const closeBtn = document.getElementById("copilot-close-btn");
+        const sendBtn = document.getElementById("copilot-send-btn");
+        const input = document.getElementById("copilot-chat-input");
+
+        if (toggleBtn && widget) {
+            toggleBtn.addEventListener("click", () => {
+                widget.classList.toggle("copilot-collapsed");
+                const chatInput = document.getElementById("copilot-chat-input");
+                if (chatInput && !widget.classList.contains("copilot-collapsed")) {
+                    chatInput.focus();
+                }
+            });
+        }
+
+        if (closeBtn && widget) {
+            closeBtn.addEventListener("click", () => {
+                widget.classList.add("copilot-collapsed");
+            });
+        }
+
+        const handleSend = () => {
+            const text = input.value.trim();
+            if (!text) return;
+            this.sendCopilotUserMessage(text);
+            input.value = "";
+        };
+
+        if (sendBtn) sendBtn.addEventListener("click", handleSend);
+        if (input) {
+            input.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") handleSend();
+            });
+        }
+
+        // Suggestions
+        document.querySelectorAll(".suggestion-chip").forEach(chip => {
+            chip.addEventListener("click", () => {
+                const cmd = chip.getAttribute("data-cmd");
+                this.sendCopilotUserMessage(cmd);
+            });
+        });
+    }
+
+    sendCopilotUserMessage(text) {
+        this.addCopilotMessage(text, "user");
+        
+        // Show typing indicator / delay response
+        setTimeout(() => {
+            const reply = this.generateCopilotResponse(text);
+            this.addCopilotMessage(reply, "bot");
+        }, 500 + Math.random() * 500);
+    }
+
+    addCopilotMessage(text, sender) {
+        const body = document.getElementById("copilot-chat-body");
+        if (!body) return;
+        
+        const msg = document.createElement("div");
+        msg.className = `copilot-msg ${sender}`;
+        msg.innerHTML = `
+            <div class="msg-sender">${sender === "bot" ? "Copilot AI" : "Operator"}</div>
+            <div class="msg-text">${text}</div>
+        `;
+        
+        body.appendChild(msg);
+        body.scrollTop = body.scrollHeight;
+    }
+
+    generateCopilotResponse(input) {
+        const clean = input.toLowerCase().trim();
+        
+        if (clean.includes("/status") || clean.includes("status") || clean.includes("health")) {
+            let failedPodsList = [];
+            let totalPodsCount = 0;
+            this.state.nodes.forEach(node => {
+                node.pods.forEach(pod => {
+                    totalPodsCount++;
+                    if (pod.status === "failed") {
+                        failedPodsList.push(pod.pod_name);
+                    }
+                });
+            });
+            
+            const resiliency = Math.max(0, 100 - (failedPodsList.length * 10));
+            if (failedPodsList.length === 0) {
+                return `🟢 **Cluster Health: EXCELLENT**<br>All services are running healthy.<br>• Resiliency Index: 100%<br>• Node count: ${this.state.nodes.length}<br>• Pod count: ${totalPodsCount}<br>• Active alerts: 0`;
+            } else {
+                return `🔴 **Cluster Health: DEGRADED**<br>Outages detected on ${failedPodsList.length} containers:<br>${failedPodsList.map(p => `• \`${p}\` (crashed)`).join("<br>")}<br>• Resiliency Index: ${resiliency}%<br>• Action recommendation: Type \`/heal\` to recover failed pods.`;
+            }
+        }
+        
+        if (clean.includes("/predict") || clean.includes("predict") || clean.includes("forecast")) {
+            let activeAnomaly = null;
+            this.state.nodes.forEach(node => {
+                node.pods.forEach(pod => {
+                    if (this.failQueue.has(pod.pod_name)) {
+                        activeAnomaly = pod.pod_name;
+                    }
+                });
+            });
+            
+            if (activeAnomaly) {
+                return `🔮 **AI Outage Prediction Anomaly**<br>Warning: Telemetry anomaly detected on pod \`${activeAnomaly}\`. CPU utilization is spiking exponentially.<br>• Prediction: Outage crash imminent (within 10-15s).<br>• Suggested fix: Manually restart the pod to preemptively clear memory leakage.`;
+            } else {
+                return `🔮 **AI Outage Prediction**<br>No anomalous memory slopes or CPU telemetry spikes detected. All container metrics are behaving within stable baseline parameters. Next failure likelihood: <1.2%`;
+            }
+        }
+        
+        if (clean.includes("/heal") || clean.includes("heal") || clean.includes("restart") || clean.includes("fix")) {
+            if (this.currentRole === "viewer") {
+                return `🔒 **Access Denied**: Your current RBAC role is \`Viewer (Read-Only)\`. You are restricted from deploying hot-fixes. Please switch your identity role in the sidebar context.`;
+            }
+            
+            let healedCount = 0;
+            this.state.nodes.forEach(node => {
+                node.pods.forEach(pod => {
+                    if (pod.status === "failed") {
+                        healedCount++;
+                        this.restartPod(pod.pod_name, true);
+                    }
+                });
+            });
+            
+            if (healedCount > 0) {
+                return `⚡ **Self-Healing Engaged**<br>Orchestrated container recovery loops for ${healedCount} crashed replica(s). Current status: **ROLLING UPDATE PENDING** (takes ~3s). Check log analytic streams for rollout confirmations.`;
+            } else {
+                return `⚡ **Self-Healing Scan**<br>No crashed pods or failed containers found. All system states are healthy. Healing loop bypassed.`;
+            }
+        }
+        
+        if (clean.includes("/terraform") || clean.includes("terraform") || clean.includes("iac")) {
+            return `🛠️ **IaC Workspace Configuration**<br>• Provider: AWS (us-east-1)<br>• State backend: S3 bucket encrypted<br>• Topology: 1 VPC, 4 Private Subnets, 1 EKS cluster, 1 Aurora DB.<br>• Current diff state: ${this.terraform.planRan ? "Plan generated (ready to apply)." : "No active diffs (synced with cluster)."}`;
+        }
+        
+        if (clean.includes("hello") || clean.includes("hi") || clean.includes("help")) {
+            return `👋 **Nebula-Twin Copilot AI Online**<br>How can I assist your observability workflow today, Operator?<br>Available commands:<br>• \`/status\` - Diagnostics audit<br>• \`/predict\` - AI anomaly forecast<br>• \`/heal\` - Engage container hot-fixes<br>• \`/terraform\` - View IaC status`;
+        }
+        
+        return `🤖 **Command unrecognized**<br>I did not understand that. You can type:<br>• \`/status\` (Health audit)<br>• \`/predict\` (AI forecast)<br>• \`/heal\` (Recover outages)<br>• \`/terraform\` (IaC state)`;
     }
 }
 

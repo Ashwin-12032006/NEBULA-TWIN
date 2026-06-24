@@ -168,6 +168,13 @@
                         <span class="switch-slider"></span>
                     </label>
                 </div>
+                <div class="config-group">
+                    <label class="switch-label">
+                        <span>Voice Alerts</span>
+                        <input type="checkbox" id="voice-alerts-toggle" class="switch-input" checked>
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
                 <div class="sim-speed-control mt-sm">
                     <span>Engine Tick</span>
                     <button id="sim-toggle-btn" class="sim-btn active">Running</button>
@@ -210,6 +217,13 @@
                     <div class="metric-pill">
                         <span class="metric-pill-label">Unresolved Alerts</span>
                         <span id="metric-alerts" class="metric-pill-value">0</span>
+                    </div>
+                    <div class="metric-pill">
+                        <span class="metric-pill-label">Resiliency Index</span>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span id="metric-resiliency" class="metric-pill-value" style="color:var(--color-green);">100%</span>
+                            <span id="metric-resiliency-trend" style="font-size:0.7rem; color:var(--color-green);">▲</span>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -666,6 +680,39 @@
                         <div>Slack notification channel online. Connected to Kubernetes event stream.</div>
                     </div>
                 </div>
+            </div>
+        </div>
+    <!-- Chaos Screen Glitch Overlay -->
+    <div id="glitch-overlay"></div>
+
+    <!-- Floating AI DevOps Copilot -->
+    <div id="copilot-widget" class="copilot-collapsed">
+        <button id="copilot-toggle-btn" aria-label="Toggle DevOps Copilot">
+            <svg viewBox="0 0 24 24" style="width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:2;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="9" cy="9" r="1" fill="currentColor"/><circle cx="15" cy="9" r="1" fill="currentColor"/><path d="M8 13c1.5 1.5 3.5 1.5 5 0"/></svg>
+        </button>
+        <div id="copilot-chat-card">
+            <div class="copilot-header">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="copilot-status-dot"></span>
+                    <span style="font-weight:800; font-size:0.85rem; letter-spacing:0.5px;">DevOps Copilot AI</span>
+                </div>
+                <button id="copilot-close-btn" aria-label="Close Chat">&times;</button>
+            </div>
+            <div id="copilot-chat-body" class="copilot-body">
+                <div class="copilot-msg bot">
+                    <div class="msg-sender">Copilot AI</div>
+                    <div class="msg-text">Welcome Operator! I am your real-time DevOps Copilot. I scan cluster states and orchestrate self-healing pipelines. Click a quick command or type to talk:</div>
+                </div>
+                <div class="copilot-suggestions">
+                    <button class="suggestion-chip" data-cmd="/status">📊 System Status</button>
+                    <button class="suggestion-chip" data-cmd="/predict">🔮 Forecast Failures</button>
+                    <button class="suggestion-chip" data-cmd="/heal">⚡ Heal Outages</button>
+                    <button class="suggestion-chip" data-cmd="/terraform">🛠️ Infra Plan</button>
+                </div>
+            </div>
+            <div class="copilot-footer">
+                <input type="text" id="copilot-chat-input" placeholder="Type command (e.g. /status, /heal)...">
+                <button id="copilot-send-btn">Send</button>
             </div>
         </div>
     </div>
